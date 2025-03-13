@@ -8,6 +8,7 @@ import java.util.List;
 public class Customer {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "customer_id", columnDefinition = "CHAR(36)")
     private String customerId;
 
@@ -45,6 +46,17 @@ public class Customer {
     private List<Review> reviews = new ArrayList<>();
 
     // Constructors, Getters, Setters
+    public Customer(String firstName, String lastName, String email, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+    }
+
+    public Customer() {
+
+    }
+
     public String getCustomerId() {
         return customerId;
     }

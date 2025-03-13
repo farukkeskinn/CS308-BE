@@ -10,9 +10,12 @@ import edu.sabanciuniv.projectbackend.repositories.ProductManagerRepository;
 import edu.sabanciuniv.projectbackend.repositories.SalesManagerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class AuthService {
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
     private AdminRepository adminRepo;
@@ -26,13 +29,23 @@ public class AuthService {
     @Autowired
     private SalesManagerRepository smRepo;
 
+    public String register(String firstName, String lastName, String email, String password) {
+        if (customerRepo.findByEmail(email) == null) {
+            String encryptedPassword = passwordEncoder.encode(password);
+            Customer newCustomer = new Customer(firstName, lastName, email, encryptedPassword);
+            customerRepo.save(newCustomer);
+            return "CUSTOMER";
+        }
+        return null;
+    }
+
     public String login(String email, String password) {
 
         // 1) ADMIN
         Admin admin = adminRepo.findByEmail(email);
         if (admin != null) {
             System.out.println("DEBUG: Found admin in DB -> " + admin.getEmail() + " / " + admin.getPassword());
-            if (admin.getPassword().equals(password)) {
+            if (passwordEncoder.matches(password, admin.getPassword())) {
                 return "ADMIN";
             }
         }
@@ -41,7 +54,7 @@ public class AuthService {
         Customer customer = customerRepo.findByEmail(email);
         if (customer != null) {
             System.out.println("DEBUG: Found customer in DB -> " + customer.getEmail() + " / " + customer.getPassword());
-            if (customer.getPassword().equals(password)) {
+            if (passwordEncoder.matches(password, customer.getPassword())) {
                 return "CUSTOMER";
             }
         }
@@ -50,7 +63,7 @@ public class AuthService {
         ProductManager pm = pmRepo.findByEmail(email);
         if (pm != null) {
             System.out.println("DEBUG: Found product manager in DB -> " + pm.getEmail() + " / " + pm.getPassword());
-            if (pm.getPassword().equals(password)) {
+            if (passwordEncoder.matches(password, pm.getPassword())) {
                 return "PRODUCT_MANAGER";
             }
         }
@@ -59,7 +72,7 @@ public class AuthService {
         SalesManager sm = smRepo.findByEmail(email);
         if (sm != null) {
             System.out.println("DEBUG: Found sales manager in DB -> " + sm.getEmail() + " / " + sm.getPassword());
-            if (sm.getPassword().equals(password)) {
+            if (passwordEncoder.matches(password, sm.getPassword())) {
                 return "SALES_MANAGER";
             }
         }
