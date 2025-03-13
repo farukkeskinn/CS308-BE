@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProductManagerRepository extends JpaRepository<ProductManager, String> {
-    // Additional queries if needed
+    ProductManager findByEmail(String email);
 }
