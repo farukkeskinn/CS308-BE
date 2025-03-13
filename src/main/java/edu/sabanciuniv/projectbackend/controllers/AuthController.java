@@ -1,55 +1,49 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
+import edu.sabanciuniv.projectbackend.dto.LoginRequest;
 import edu.sabanciuniv.projectbackend.services.AuthService;
 import edu.sabanciuniv.projectbackend.utils.JWTUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
 
-    // LOGIN
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
     @PostMapping("/login")
-    public String login(@RequestParam String email,
-                        @RequestParam String password) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        System.out.println("========== LOGIN REQUEST RECEIVED ==========");
+        System.out.println("Email: " + loginRequest.getEmail());
+        System.out.println("Password: " + loginRequest.getPassword());
+
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
+
+        if (email == null || password == null) {
+            System.out.println("ERROR: Email or password is null!");
+            return ResponseEntity.status(400).body(Map.of("message", "Email and password are required!"));
+        }
 
         String role = authService.login(email, password);
+        System.out.println("AuthService Response: " + role);
+
         if (role != null) {
-            // Create JWT token
             String token = JWTUtil.generateToken(role, email);
-
-            // Return JSON string
-            return "{ \"message\": \"Login successful.\", \"role\": \"" + role + "\", \"token\": \"" + token + "\" }";
+            System.out.println("Generated Token: " + token);
+            System.out.println("============================================");
+            return ResponseEntity.ok(Map.of("message", "Login successful.", "role", role, "token", token));
         } else {
-            return "{ \"message\": \"Login failed. Invalid email or password!\" }";
+            System.out.println("ERROR: Invalid email or password!");
+            System.out.println("============================================");
+            return ResponseEntity.status(401).body(Map.of("message", "Login failed. Invalid email or password!"));
         }
-    }
-
-    // LOGOUT
-    @PostMapping("/logout")
-    public String logout() {
-        return "Logout successful!";
-    }
-
-    // OPTIONAL: Protected endpoint example
-    @GetMapping("/testProtected")
-    public String testProtected(@RequestHeader("Authorization") String authHeader) {
-        if (!authHeader.startsWith("Bearer ")) {
-            return "Invalid token format!";
-        }
-        String token = authHeader.substring(7);
-
-        boolean valid = JWTUtil.validateToken(token);
-        if (!valid) {
-            return "Token invalid!";
-        }
-
-        String role = JWTUtil.getRoleFromToken(token);
-        String email = JWTUtil.getEmailFromToken(token);
-        return "Token is valid. Role = " + role + ", Email = " + email;
     }
 }

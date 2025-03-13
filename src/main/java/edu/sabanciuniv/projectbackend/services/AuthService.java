@@ -8,64 +8,85 @@ import edu.sabanciuniv.projectbackend.repositories.AdminRepository;
 import edu.sabanciuniv.projectbackend.repositories.CustomerRepository;
 import edu.sabanciuniv.projectbackend.repositories.ProductManagerRepository;
 import edu.sabanciuniv.projectbackend.repositories.SalesManagerRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-    @Autowired
-    private AdminRepository adminRepo;
+    private final AdminRepository adminRepo;
+    private final CustomerRepository customerRepo;
+    private final ProductManagerRepository pmRepo;
+    private final SalesManagerRepository smRepo;
 
-    @Autowired
-    private CustomerRepository customerRepo;
-
-    @Autowired
-    private ProductManagerRepository pmRepo;
-
-    @Autowired
-    private SalesManagerRepository smRepo;
+    public AuthService(AdminRepository adminRepo, CustomerRepository customerRepo,
+                       ProductManagerRepository pmRepo, SalesManagerRepository smRepo) {
+        this.adminRepo = adminRepo;
+        this.customerRepo = customerRepo;
+        this.pmRepo = pmRepo;
+        this.smRepo = smRepo;
+    }
 
     public String login(String email, String password) {
+        System.out.println("========== AUTH SERVICE START ==========");
+        System.out.println("Checking login for: " + email);
+
+        // Convert email to lowercase for consistent lookup
+        email = email.toLowerCase().trim();
 
         // 1) ADMIN
         Admin admin = adminRepo.findByEmail(email);
         if (admin != null) {
-            System.out.println("DEBUG: Found admin in DB -> " + admin.getEmail() + " / " + admin.getPassword());
-            if (admin.getPassword().equals(password)) {
+            System.out.println("Found Admin: " + admin.getEmail());
+            if (admin.getPassword().trim().equals(password.trim())) {
+                System.out.println("Admin login successful!");
+                System.out.println("=======================================");
                 return "ADMIN";
+            } else {
+                System.out.println("Password mismatch!");
             }
         }
 
         // 2) CUSTOMER
         Customer customer = customerRepo.findByEmail(email);
         if (customer != null) {
-            System.out.println("DEBUG: Found customer in DB -> " + customer.getEmail() + " / " + customer.getPassword());
-            if (customer.getPassword().equals(password)) {
+            System.out.println("Found Customer: " + customer.getEmail());
+            if (customer.getPassword().trim().equals(password.trim())) {
+                System.out.println("Customer login successful!");
+                System.out.println("=======================================");
                 return "CUSTOMER";
+            } else {
+                System.out.println("Password mismatch!");
             }
         }
 
         // 3) PRODUCT_MANAGER
         ProductManager pm = pmRepo.findByEmail(email);
         if (pm != null) {
-            System.out.println("DEBUG: Found product manager in DB -> " + pm.getEmail() + " / " + pm.getPassword());
-            if (pm.getPassword().equals(password)) {
+            System.out.println("Found Product Manager: " + pm.getEmail());
+            if (pm.getPassword().trim().equals(password.trim())) {
+                System.out.println("Product Manager login successful!");
+                System.out.println("=======================================");
                 return "PRODUCT_MANAGER";
+            } else {
+                System.out.println("Password mismatch!");
             }
         }
 
         // 4) SALES_MANAGER
         SalesManager sm = smRepo.findByEmail(email);
         if (sm != null) {
-            System.out.println("DEBUG: Found sales manager in DB -> " + sm.getEmail() + " / " + sm.getPassword());
-            if (sm.getPassword().equals(password)) {
+            System.out.println("Found Sales Manager: " + sm.getEmail());
+            if (sm.getPassword().trim().equals(password.trim())) {
+                System.out.println("Sales Manager login successful!");
+                System.out.println("=======================================");
                 return "SALES_MANAGER";
+            } else {
+                System.out.println("Password mismatch!");
             }
         }
 
-        // NONE
+        System.out.println("ERROR: No user found with this email!");
+        System.out.println("=======================================");
         return null;
     }
 }
-
