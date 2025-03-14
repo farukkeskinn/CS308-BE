@@ -1,22 +1,13 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.3'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.0.0'
+    id 'io.spring.dependency-management' version '1.1.0'
 }
 
-group = 'edu.sabanciuniv'
-version = '0.0.1-SNAPSHOT'
-
+group = 'com.example'
+version = '1.0.0'
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
-    }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
+    sourceCompatibility = JavaVersion.VERSION_17
 }
 
 repositories {
@@ -24,17 +15,21 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
-    //implementation 'org.springframework.boot:spring-boot-starter-security'
+    // Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'org.postgresql:postgresql'
-    annotationProcessor 'org.projectlombok:lombok'
+    // JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // MySQL Driver
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    // Test (opsiyonel)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
