@@ -22,6 +22,10 @@ public class ReviewService {
         return reviewRepository.findById(reviewId).orElse(null);
     }
 
+    public List<Review> getReviewsByProductId(String productId) {
+        return reviewRepository.findByProduct_ProductId(productId);
+    }
+
     public Review saveReview(Review review) {
         return reviewRepository.save(review);
     }
