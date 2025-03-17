@@ -1,4 +1,5 @@
 package edu.sabanciuniv.projectbackend.models;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public class Category {
 
     // If you want a bidirectional relationship to get subcategories:
     @OneToMany(mappedBy = "parentCategory", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Category> subCategories = new ArrayList<>();
 
     // Constructors, Getters, Setters

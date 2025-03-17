@@ -76,4 +76,15 @@ public class ProductController {
                 reviewResponses
         ));
     }
+
+    @GetMapping("/by-main-category/{categoryId}")
+    public List<Product> getProductsByMainCategory(@PathVariable("categoryId") Integer categoryId) {
+        return productService.getProductsByMainCategory(categoryId);
+    }
+
+    @GetMapping("/by-sub-category/{categoryId}")
+    public List<Product> getProductsBySubCategory(@PathVariable("categoryId") Integer categoryId) {
+        return productService.getProductsBySubCategory(categoryId);
+    }
+
 }

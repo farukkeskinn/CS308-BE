@@ -29,4 +29,13 @@ public class ProductService {
     public void deleteProduct(String productId) {
         productRepository.deleteById(productId);
     }
+
+    public List<Product> getProductsByMainCategory(Integer categoryId) {
+        return productRepository.findProductsByMainCategory(categoryId);
+    }
+
+    public List<Product> getProductsBySubCategory(Integer categoryId) {
+        return productRepository.findByCategory_CategoryId(categoryId);
+    }
+
 }
