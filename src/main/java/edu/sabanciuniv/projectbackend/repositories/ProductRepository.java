@@ -1,6 +1,8 @@
 package edu.sabanciuniv.projectbackend.repositories;
 
 import edu.sabanciuniv.projectbackend.models.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,9 +17,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             "WHERE p.category.categoryId = :categoryId " +
             "   OR (p.category.parentCategory IS NOT NULL " +
             "       AND p.category.parentCategory.categoryId = :categoryId)")
-    List<Product> findProductsByMainCategory(@Param("categoryId") Integer categoryId);
-
-    List<Product> findByCategory_CategoryId(Integer categoryId);
+    Page<Product> findByCategory(@Param("categoryId") Integer categoryId, Pageable pageable);
 
 
 }

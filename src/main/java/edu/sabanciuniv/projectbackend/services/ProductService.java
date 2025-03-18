@@ -2,6 +2,8 @@ package edu.sabanciuniv.projectbackend.services;
 
 import edu.sabanciuniv.projectbackend.models.Product;
 import edu.sabanciuniv.projectbackend.repositories.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,12 +32,8 @@ public class ProductService {
         productRepository.deleteById(productId);
     }
 
-    public List<Product> getProductsByMainCategory(Integer categoryId) {
-        return productRepository.findProductsByMainCategory(categoryId);
-    }
-
-    public List<Product> getProductsBySubCategory(Integer categoryId) {
-        return productRepository.findByCategory_CategoryId(categoryId);
+    public Page<Product> getProductsByCategory(Integer categoryId, Pageable pageable) {
+        return productRepository.findByCategory(categoryId, pageable);
     }
 
 }
