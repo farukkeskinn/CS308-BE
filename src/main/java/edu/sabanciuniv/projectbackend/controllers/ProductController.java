@@ -89,4 +89,17 @@ public class ProductController {
         return productService.getProductsByCategory(categoryId, pageable);
     }
 
+    @GetMapping("/{id}/recommended")
+    public ResponseEntity<Page<Product>> getRecommendedProducts(
+            @PathVariable("id") String productId,
+            @PageableDefault(page = 0, size = 5) Pageable pageable) {
+
+        Product product = productService.getProductById(productId);
+        if (product == null || product.getCategory() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Page<Product> recommendedProducts = productService.getRecommendedProducts(product.getCategory().getCategoryId(), productId, pageable);
+        return ResponseEntity.ok(recommendedProducts);
+    }
 }

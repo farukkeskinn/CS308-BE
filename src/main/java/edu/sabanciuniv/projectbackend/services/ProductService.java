@@ -36,4 +36,7 @@ public class ProductService {
         return productRepository.findByCategory(categoryId, pageable);
     }
 
+    public Page<Product> getRecommendedProducts(Integer categoryId, String excludeProductId, Pageable pageable) {
+        return productRepository.findRecommendedProducts(categoryId, excludeProductId, pageable);
+    }
 }

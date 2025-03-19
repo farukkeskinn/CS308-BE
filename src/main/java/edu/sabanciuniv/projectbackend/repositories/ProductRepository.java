@@ -20,4 +20,13 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     Page<Product> findByCategory(@Param("categoryId") Integer categoryId, Pageable pageable);
 
 
+    @Query("SELECT p FROM Product p " +
+            "WHERE (p.category.categoryId = :categoryId " +
+            "   OR (p.category.parentCategory IS NOT NULL " +
+            "       AND p.category.parentCategory.categoryId = :categoryId)) " +
+            "AND p.productId != :excludeProductId")
+    Page<Product> findRecommendedProducts(
+            @Param("categoryId") Integer categoryId,
+            @Param("excludeProductId") String excludeProductId,
+            Pageable pageable);
 }
