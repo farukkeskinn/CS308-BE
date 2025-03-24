@@ -104,4 +104,17 @@ public class Product {
     public List<Review> getReviews() {
         return reviews;
     }
+
+    public Integer getStock() {
+        // "quantity" will used as stock
+        return this.quantity;
+    }
+
+    public void setStock(Integer stock) {
+        this.quantity = stock;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
 }

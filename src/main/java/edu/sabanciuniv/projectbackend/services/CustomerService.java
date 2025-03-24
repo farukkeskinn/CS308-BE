@@ -30,4 +30,9 @@ public class CustomerService {
     public void deleteCustomer(String customerId) {
         customerRepository.deleteById(customerId);
     }
+
+    public Customer getCustomerById(String customerId) {
+        return getCustomer(customerId);
+    }
+
 }
