@@ -40,5 +40,20 @@ public class ShoppingCartItem {
     public Integer getQuantity() {
         return quantity;
     }
-}
 
+    public void setShoppingCartItemId(String shoppingCartItemId) {
+        this.shoppingCartItemId = shoppingCartItemId;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setShoppingCart(ShoppingCart shoppingCart) {
+        this.shoppingCart = shoppingCart;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+}

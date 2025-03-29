@@ -1,7 +1,6 @@
 package edu.sabanciuniv.projectbackend.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,4 +41,22 @@ public class ShoppingCart {
     public List<ShoppingCartItem> getShoppingCartItems() {
         return shoppingCartItems;
     }
+
+    public void setCartId(String cartId) {
+        this.cartId = cartId;
+    }
+
+    public void setCartStatus(String cartStatus) {
+        this.cartStatus = cartStatus;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
+    public void setShoppingCartItems(List<ShoppingCartItem> shoppingCartItems) {
+        this.shoppingCartItems = shoppingCartItems;
+    }
+
+
 }
