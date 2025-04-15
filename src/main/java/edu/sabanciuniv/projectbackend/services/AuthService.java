@@ -40,66 +40,27 @@ public class AuthService {
     }
 
     public String login(String email, String password) {
-        System.out.println("========== AUTH SERVICE START ==========");
-        System.out.println("Checking login for: " + email);
-
         // Convert email to lowercase for consistent lookup
         email = email.toLowerCase().trim();
 
-        // 1) ADMIN
-        Admin admin = adminRepo.findByEmail(email);
-        if (admin != null) {
-            System.out.println("Found Admin: " + admin.getEmail());
-            if (passwordEncoder.matches(password, admin.getPassword())) {
-                System.out.println("Admin login successful!");
-                System.out.println("=======================================");
-                return "ADMIN";
-            } else {
-                System.out.println("Password mismatch!");
-            }
-        }
-
-        // 2) CUSTOMER
+        // 1) CUSTOMER
         Customer customer = customerRepo.findByEmail(email);
-        if (customer != null) {
-            System.out.println("Found Customer: " + customer.getEmail());
-            if (passwordEncoder.matches(password, customer.getPassword())) {
-                System.out.println("Customer login successful!");
-                System.out.println("=======================================");
-                return "CUSTOMER";
-            } else {
-                System.out.println("Password mismatch!");
-            }
+        if (customer != null && passwordEncoder.matches(password, customer.getPassword())) {
+            return "CUSTOMER";
         }
 
-        // 3) PRODUCT_MANAGER
+        // 2) PRODUCT_MANAGER
         ProductManager pm = pmRepo.findByEmail(email);
-        if (pm != null) {
-            System.out.println("Found Product Manager: " + pm.getEmail());
-            if (passwordEncoder.matches(password, pm.getPassword())) {
-                System.out.println("Product Manager login successful!");
-                System.out.println("=======================================");
-                return "PRODUCT_MANAGER";
-            } else {
-                System.out.println("Password mismatch!");
-            }
+        if (pm != null && passwordEncoder.matches(password, pm.getPassword())) {
+            return "PRODUCT_MANAGER";
         }
 
-        // 4) SALES_MANAGER
+        // 3) SALES_MANAGER
         SalesManager sm = smRepo.findByEmail(email);
-        if (sm != null) {
-            System.out.println("Found Sales Manager: " + sm.getEmail());
-            if (passwordEncoder.matches(password, sm.getPassword())) {
-                System.out.println("Sales Manager login successful!");
-                System.out.println("=======================================");
-                return "SALES_MANAGER";
-            } else {
-                System.out.println("Password mismatch!");
-            }
+        if (sm != null && passwordEncoder.matches(password, sm.getPassword())) {
+            return "SALES_MANAGER";
         }
 
-        System.out.println("ERROR: No user found with this email!");
-        System.out.println("=======================================");
         return null;
     }
 }

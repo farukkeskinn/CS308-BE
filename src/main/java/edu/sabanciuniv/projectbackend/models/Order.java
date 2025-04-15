@@ -29,6 +29,9 @@ public class Order {
     @Column(name = "invoice_link")
     private String invoiceLink;
 
+    @ManyToOne
+    private SalesManager salesManager;
+
     // Relationship to Customer
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
