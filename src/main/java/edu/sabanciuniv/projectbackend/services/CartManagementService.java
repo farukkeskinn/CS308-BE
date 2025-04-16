@@ -1,5 +1,7 @@
 package edu.sabanciuniv.projectbackend.services;
 
+import edu.sabanciuniv.projectbackend.models.Customer;
+
 import edu.sabanciuniv.projectbackend.dto.AddItemRequest;
 import edu.sabanciuniv.projectbackend.dto.MergeCartRequest;
 import edu.sabanciuniv.projectbackend.models.ShoppingCart;
@@ -301,4 +303,14 @@ public class CartManagementService {
             cartItemRepository.save(item);
         }
     }
+
+
+    public Customer getCustomerById(String customerId) {
+        return customerService.getCustomerById(customerId);
+    }
+
+    public ShoppingCart getCartByCustomer(Customer customer) {
+        return cartRepository.findByCustomer(customer);
+    }
+
 }

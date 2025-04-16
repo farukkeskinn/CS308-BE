@@ -1,5 +1,7 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
+import edu.sabanciuniv.projectbackend.models.Customer;
+
 import edu.sabanciuniv.projectbackend.dto.AddItemRequest;
 import edu.sabanciuniv.projectbackend.dto.MergeCartRequest;
 import edu.sabanciuniv.projectbackend.dto.RemovePartialQuantityRequest;
@@ -82,4 +84,21 @@ public class CartManagementController {
     public void removePartialQuantity(@RequestBody RemovePartialQuantityRequest request) {
         cartManagementService.removePartialQuantity(request.getItemId(), request.getQuantity());
     }
+
+    @GetMapping("/cart-by-customer/{customerId}")
+    public ResponseEntity<?> getCartByCustomer(@PathVariable String customerId) {
+        Customer customer = cartManagementService.getCustomerById(customerId);
+        if (customer == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "Customer not found"));
+        }
+
+        ShoppingCart cart = cartManagementService.getCartByCustomer(customer);
+        if (cart == null) {
+            return ResponseEntity.ok(Map.of("message", "No cart found for this customer"));
+        }
+
+        return ResponseEntity.ok(cart);
+    }
+
+
 }
