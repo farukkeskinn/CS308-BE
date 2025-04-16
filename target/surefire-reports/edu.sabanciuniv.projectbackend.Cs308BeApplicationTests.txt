@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: edu.sabanciuniv.projectbackend.Cs308BeApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.83 s -- in edu.sabanciuniv.projectbackend.Cs308BeApplicationTests

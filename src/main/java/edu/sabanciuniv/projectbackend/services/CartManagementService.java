@@ -121,6 +121,18 @@ public class CartManagementService {
         return cart; // If stock is sufficient, item is added; otherwise, return null
     }
 
+
+    public void logoutAndClearCart(String customerId) {
+        var customer = customerService.getCustomerById(customerId);
+        if (customer == null) return;
+
+        var cart = cartRepository.findByCustomer(customer);
+        if (cart == null) return;
+
+        clearCart(cart.getCartId());
+    }
+
+
     /**
      * 2) Remove a single item (by itemId) from cart
      */
