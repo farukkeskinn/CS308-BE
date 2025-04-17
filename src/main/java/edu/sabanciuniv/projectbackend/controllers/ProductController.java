@@ -66,7 +66,7 @@ public class ProductController {
 
         List<ReviewResponse> reviewResponses = reviewService.getReviewsByProductId(productId)
                 .stream()
-                .map(review -> new ReviewResponse(review.getRating(), review.getComment()))
+                .map(review -> new ReviewResponse(review.getRating(), review.getComment(), review.getApprovalStatus()))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(new ProductDetailsResponse(
