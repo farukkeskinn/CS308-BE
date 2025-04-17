@@ -2,6 +2,7 @@ package edu.sabanciuniv.projectbackend.controllers;
 
 import edu.sabanciuniv.projectbackend.models.Payment;
 import edu.sabanciuniv.projectbackend.services.PaymentService;
+import edu.sabanciuniv.projectbackend.utils.JWTUtil;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,15 +53,29 @@ public class PaymentController {
 
     @PostMapping("/checkout")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<?> checkout(@Valid @RequestBody PaymentRequest request, Principal principal) {
+    public ResponseEntity<?> checkout(
+            @Valid @RequestBody PaymentRequest request,
+            @RequestHeader("Authorization") String authHeader
+    ) {
         try {
-            String testUsername = "atarikgunerr@gmail.com";
-            InvoiceResponse invoice = paymentService.processCheckout(request, testUsername);
+            // 🔐 Token'ı al ve "Bearer " kısmını temizle
+            if (!authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token format!");
+            }
+            String token = authHeader.substring(7); // "Bearer " sonrası
+
+            // 📩 Token'dan email (username) çek
+            String username = JWTUtil.getEmailFromToken(token);
+
+            // 🧾 Checkout işlemi başlat
+            InvoiceResponse invoice = paymentService.processCheckout(request, username);
             return ResponseEntity.ok(invoice);
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Checkout failed: " + e.getMessage());
         }
     }
+
 
 }

@@ -80,7 +80,8 @@ public class PaymentService {
             var product = item.getProduct();
             int boughtQty = item.getQuantity();
 
-            product.setItemSold(product.getItemSold() + boughtQty); // satış sayısını artır
+            product.setItemSold(product.getItemSold() + boughtQty);// satış sayısını artır
+            product.setQuantity(product.getQuantity() - boughtQty);
 
             // Optional: stok 0'ın altına düşmesin
             if (product.getQuantity() < 0) {
