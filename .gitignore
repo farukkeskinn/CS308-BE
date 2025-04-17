@@ -1,18 +1,29 @@
-# Gradle & Java build
+# Java & Gradle
 .gradle/
 build/
 *.class
-*.bin
-*.lock
+*.jar
+*.war
 *.log
-*.tmp
 
-# IDE
+# IntelliJ IDEA
 .idea/
 *.iml
+*.ipr
+*.iws
+
+# OS / IDE
+.DS_Store
+*.swp
+
+# Compiled files & temp
+out/
+*.bin
+*.lock
+*.tmp
 
 # VS Code
 .vscode/
 
-# OS
-.DS_Store
+# Spring Boot
+target/

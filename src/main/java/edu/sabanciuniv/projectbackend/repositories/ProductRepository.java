@@ -29,4 +29,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             @Param("categoryId") Integer categoryId,
             @Param("excludeProductId") String excludeProductId,
             Pageable pageable);
+
+    List<Product> findByCategory_CategoryId(Integer categoryId);
+
 }

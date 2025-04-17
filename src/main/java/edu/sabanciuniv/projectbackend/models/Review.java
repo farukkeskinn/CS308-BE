@@ -1,6 +1,7 @@
 package edu.sabanciuniv.projectbackend.models;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
@@ -55,5 +56,14 @@ public class Review {
 
     public Product getProduct() {
         return product;
+    }
+
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
+    }
+
+    @JsonProperty("productId")
+    public String getProductId() {
+        return product == null ? null : product.getProductId();
     }
 }
