@@ -47,19 +47,16 @@ public class CartManagementService {
      *        - If new item -> check stock, if insufficient return error, otherwise add
      */
     public ShoppingCart addItemToCart(AddItemRequest request) {
-        // 1) Is this a GUEST?
+        // 1) Guest check
         if (request.getCustomerId() == null || request.getCustomerId().isBlank()) {
-            // Not saving to DB -> GUEST flow
-            // [*TO BE ADDED*] return a 'dummy' cart
             ShoppingCart dummyCart = new ShoppingCart();
-            dummyCart.setCartId("GUEST_FLOW"); // special ID
+            dummyCart.setCartId("GUEST_FLOW");
             return dummyCart;
         }
 
-        // 2) USER (find customer)
+        // 2) Fetch customer
         var customer = customerService.getCustomerById(request.getCustomerId());
         if (customer == null) {
-            // Customer not found -> return null
             return null;
         }
 
@@ -73,54 +70,49 @@ public class CartManagementService {
             cartRepository.save(cart);
         }
 
-        // 4) Find product
-        var product = productService.getProductById(request.getProductId());
-        if (product == null) {
-            // Product not found -> return null
-            return null;
-        }
-
-        // 5) Is this product already in cart?
-        ShoppingCartItem existingItem =
-                cartItemRepository.findByCartIdAndProductId(cart.getCartId(), product.getProductId());
-
-        if (existingItem != null) {
-            // Existing item
-            int newQuantity = existingItem.getQuantity() + request.getQuantity();
-            // STOCK CHECK
-            if (newQuantity > product.getStock()) {
-                // NOT ENOUGH STOCK -> JUST return null
-                return null;
-            }
-            // Stock sufficient -> increase item quantity
-            existingItem.setQuantity(newQuantity);
-            cartItemRepository.save(existingItem);
-
-            // DECREASE STOCK
-            product.setStock(product.getStock() - request.getQuantity());
-            productService.saveProduct(product);
-
-        } else {
-            // New item
-            if (request.getQuantity() > product.getStock()) {
-                // NO STOCK -> return null
-                return null;
+        // 4) Loop over all items
+        for (var item : request.getItems()) {
+            var product = productService.getProductById(item.getProductId());
+            if (product == null) {
+                continue; // skip invalid product
             }
 
-            // Add new row
-            ShoppingCartItem newItem = new ShoppingCartItem();
-            newItem.setShoppingCartItemId(UUID.randomUUID().toString());
-            newItem.setShoppingCart(cart);
-            newItem.setProduct(product);
-            newItem.setQuantity(request.getQuantity());
-            cartItemRepository.save(newItem);
+            int quantityToAdd = item.getQuantity();
 
-            // DECREASE STOCK
-            product.setStock(product.getStock() - request.getQuantity());
+            // 5) Check if already in cart
+            ShoppingCartItem existingItem = cartItemRepository.findByCartIdAndProductId(cart.getCartId(), product.getProductId());
+
+            if (existingItem != null) {
+                int newQuantity = existingItem.getQuantity() + quantityToAdd;
+
+                // Stock check
+                if (newQuantity > product.getStock()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient stock ");
+                }
+
+                existingItem.setQuantity(newQuantity);
+                cartItemRepository.save(existingItem);
+
+            } else {
+                if (quantityToAdd > product.getStock()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient stock");
+                }
+
+                // Add new item
+                ShoppingCartItem newItem = new ShoppingCartItem();
+                newItem.setShoppingCartItemId(UUID.randomUUID().toString());
+                newItem.setShoppingCart(cart);
+                newItem.setProduct(product);
+                newItem.setQuantity(quantityToAdd);
+                cartItemRepository.save(newItem);
+            }
+
+            // Reduce stock
+            product.setStock(product.getStock() - quantityToAdd);
             productService.saveProduct(product);
         }
 
-        return cart; // If stock is sufficient, item is added; otherwise, return null
+        return cart;
     }
 
 

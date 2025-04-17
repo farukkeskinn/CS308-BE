@@ -4,6 +4,7 @@ import edu.sabanciuniv.projectbackend.models.Customer;
 import edu.sabanciuniv.projectbackend.models.ShoppingCart;
 import edu.sabanciuniv.projectbackend.repositories.CustomerRepository;
 import edu.sabanciuniv.projectbackend.repositories.ShoppingCartRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -50,5 +51,14 @@ public class CustomerService {
 
     public Customer getCustomerById(String customerId) {
         return getCustomer(customerId);
+    }
+
+
+    public String getCustomerIdByEmail(String email) {
+        Customer customer = customerRepository.findByEmail(email);
+        if (customer != null) {
+            return customer.getCustomerId(); // Ensure this returns a String
+        }
+        throw new RuntimeException("Customer not found with email: " + email);
     }
 }
