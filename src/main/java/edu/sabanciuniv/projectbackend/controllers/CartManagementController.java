@@ -22,71 +22,62 @@ public class CartManagementController {
     }
 
     /**
-     * Adds an item to the cart (or increases the quantity if it already exists).
-     * If guest -> customerId is null -> does not save to DB (localStorage).
-     * If there is not enough stock -> returns null -> JSON: "There is no enough stock".
+     * Adds an item to the cart.
+     * Guest → returns dummy cart with ID "GUEST_FLOW", nothing saved to DB.
+     * If stock not enough → returns null, with message.
      */
     @PostMapping("/add-item")
     public ResponseEntity<?> addItemToCart(@RequestBody AddItemRequest request) {
         ShoppingCart cart = cartManagementService.addItemToCart(request);
 
         if (cart == null) {
-            // Here 'null' => means INSUFFICIENT STOCK
-            return ResponseEntity.ok(Map.of("message","There is no enough stock"));
+            return ResponseEntity.ok(Map.of("message", "There is no enough stock"));
         }
 
         if ("GUEST_FLOW".equals(cart.getCartId())) {
-            // This cart belongs to GUEST scenario
-            // No DB record -> front-end uses localStorage
-            return ResponseEntity.ok(Map.of("message","guest flow, not saving to DB"));
+            return ResponseEntity.ok(Map.of("message", "guest flow, not saving to DB"));
         }
 
-        // STOCK IS SUFFICIENT + USER
         return ResponseEntity.ok(cart);
     }
 
-
     /**
-     * Removes a single item (by itemId) from the cart.
+     * Merges guest items with logged-in user's cart.
+     * Returns flag to clear localStorage after success.
      */
+    @PostMapping("/merge-guest-cart")
+    public ResponseEntity<?> mergeGuestCart(@RequestBody MergeCartRequest request) {
+        ShoppingCart cart = cartManagementService.mergeGuestCart(request);
+
+        if (cart == null) {
+            return ResponseEntity.ok(Map.of(
+                    "message", "There is no enough stock",
+                    "clearGuestCart", false
+            ));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "merge success",
+                "clearGuestCart", true,
+                "cart", cart
+        ));
+    }
+
     @DeleteMapping("/remove-item/{itemId}")
     public void removeItemFromCart(@PathVariable String itemId) {
         cartManagementService.removeItemFromCart(itemId);
     }
 
-    /**
-     * Completely clears the given cart (by cartId), removing all items.
-     */
     @DeleteMapping("/clear-cart/{cartId}")
     public void clearCart(@PathVariable String cartId) {
         cartManagementService.clearCart(cartId);
     }
 
-    /**
-     * Merges the guest cart (from localStorage) with the logged-in user's cart.
-     * If there is not enough stock -> returns null -> message response.
-     */
-    @PostMapping("/merge-guest-cart")
-    public ResponseEntity<?> mergeGuestCart(@RequestBody MergeCartRequest request) {
-        ShoppingCart cart = cartManagementService.mergeGuestCart(request);
-        if (cart == null) {
-            // Insufficient stock or some other issue
-            return ResponseEntity.ok(Map.of("message", "There is no enough stock"));
-        }
-        return ResponseEntity.ok(cart);
-    }
-
-    /**
-     * Calculates the total cart value (price * quantity).
-     */
     @GetMapping("/calculate-total/{cartId}")
     public Double calculateTotal(@PathVariable String cartId) {
         return cartManagementService.calculateCartTotal(cartId);
     }
 
-    /**
-     * Removes a partial quantity of an item from the cart.
-     */
     @PatchMapping("/remove-item-quantity")
     public void removePartialQuantity(@RequestBody RemovePartialQuantityRequest request) {
         cartManagementService.removePartialQuantity(request.getItemId(), request.getQuantity());
