@@ -2,6 +2,7 @@ package edu.sabanciuniv.projectbackend.services;
 
 import edu.sabanciuniv.projectbackend.models.Review;
 import edu.sabanciuniv.projectbackend.repositories.ReviewRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,10 +28,25 @@ public class ReviewService {
     }
 
     public Review saveReview(Review review) {
+        // Force the approvalStatus to "pending", regardless of what is sent from the frontend
+        review.setApprovalStatus("pending");
         return reviewRepository.save(review);
     }
 
     public void deleteReview(String reviewId) {
         reviewRepository.deleteById(reviewId);
     }
+
+    public List<Review> getPendingReviews() {
+        return reviewRepository.findByApprovalStatus("pending");
+    }
+
+    @Transactional
+    public Review updateReviewStatus(String reviewId, String newStatus) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Review not found with ID: " + reviewId));
+        review.setApprovalStatus(newStatus);
+        return reviewRepository.save(review);
+    }
+
 }
