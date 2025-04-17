@@ -117,4 +117,9 @@ public class Product {
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
+
+    public void setItemSold (Integer itemSold) { this.itemSold = itemSold; }
+
+
 }
+

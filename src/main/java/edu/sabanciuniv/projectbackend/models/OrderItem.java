@@ -47,4 +47,24 @@ public class OrderItem {
     public Integer getQuantity() {
         return quantity;
     }
+
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setPriceAtPurchase(Double priceAtPurchase) {
+        this.priceAtPurchase = priceAtPurchase;
+    }
+
+    public void setOrderItemId(String orderItemId) { this.orderItemId = orderItemId; }
+
 }

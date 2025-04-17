@@ -22,7 +22,7 @@ public class ShoppingCart {
     private Customer customer;
 
     // One cart can have many items
-    @OneToMany(mappedBy = "shoppingCart", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "shoppingCart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShoppingCartItem> shoppingCartItems = new ArrayList<>();
 
     // Constructors, Getters, Setters
