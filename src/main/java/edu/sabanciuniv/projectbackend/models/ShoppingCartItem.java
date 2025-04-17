@@ -1,5 +1,7 @@
 package edu.sabanciuniv.projectbackend.models;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -13,33 +15,21 @@ public class ShoppingCartItem {
     @Column(nullable = false)
     private Integer quantity;
 
-    // Relationship to ShoppingCart
     @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
     private ShoppingCart shoppingCart;
 
-    // Relationship to Product
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnoreProperties({"stock", "description", "category"}) // varsa ama istemiyorsan
     private Product product;
 
-    // Constructors, Getters, Setters
-    public String getShoppingCartItemId() {
-        return shoppingCartItemId;
-    }
-
-    public ShoppingCart getShoppingCart() {
-        return shoppingCart;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
+    // Getters and Setters
+    public String getShoppingCartItemId() { return shoppingCartItemId; }
+    public ShoppingCart getShoppingCart() { return shoppingCart; }
+    public Product getProduct() { return product; }
+    public Integer getQuantity() { return quantity; }
 
     public void setShoppingCartItemId(String shoppingCartItemId) {
         this.shoppingCartItemId = shoppingCartItemId;
