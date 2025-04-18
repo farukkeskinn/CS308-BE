@@ -1,0 +1,29 @@
+# Java & Gradle
+.gradle/
+build/
+*.class
+*.jar
+*.war
+*.log
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS / IDE
+.DS_Store
+*.swp
+
+# Compiled files & temp
+out/
+*.bin
+*.lock
+*.tmp
+
+# VS Code
+.vscode/
+
+# Spring Boot
+target/
