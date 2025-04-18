@@ -52,4 +52,29 @@ public class Payment {
     public String getPaymentStatus() {
         return paymentStatus;
     }
+
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
+    public void setEncryptedCreditCardInfo(String encryptedCreditCardInfo) {
+        this.encryptedCreditCardInfo = encryptedCreditCardInfo;
+    }
+
+    public void setPaymentDate(LocalDateTime paymentDate) {
+        this.paymentDate = paymentDate;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
 }

@@ -12,5 +12,7 @@ public interface ShoppingCartRepository extends JpaRepository<ShoppingCart, Stri
 
     @Query("SELECT sc FROM ShoppingCart sc WHERE sc.customer = :customer")
     ShoppingCart findByCustomer(@Param("customer") Customer customer);
+
+    ShoppingCart findByCustomerEmail(String email);
 }
 

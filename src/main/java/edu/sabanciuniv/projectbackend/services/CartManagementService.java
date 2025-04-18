@@ -95,9 +95,6 @@ public class CartManagementService {
             existingItem.setQuantity(newQuantity);
             cartItemRepository.save(existingItem);
 
-            // DECREASE STOCK
-            product.setStock(product.getStock() - request.getQuantity());
-            productService.saveProduct(product);
 
         } else {
             // New item
@@ -114,9 +111,6 @@ public class CartManagementService {
             newItem.setQuantity(request.getQuantity());
             cartItemRepository.save(newItem);
 
-            // DECREASE STOCK
-            product.setStock(product.getStock() - request.getQuantity());
-            productService.saveProduct(product);
         }
 
         return cart; // If stock is sufficient, item is added; otherwise, return null
