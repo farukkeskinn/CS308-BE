@@ -7,7 +7,7 @@ import edu.sabanciuniv.projectbackend.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import edu.sabanciuniv.projectbackend.services.CustomerService;
 import java.util.Map;
 
 @RestController
@@ -17,6 +17,8 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private CustomerService CustomerService; // Inject CustomerService
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         String email = loginRequest.getEmail();
@@ -30,9 +32,12 @@ public class AuthController {
 
         if (role != null) {
             String token = JWTUtil.generateToken(role, email);
-            return ResponseEntity.ok(Map.of("message", "Login successful.",
+            String customerId = String.valueOf(CustomerService.getCustomerIdByEmail(email)); // Use CustomerService to get customerId
+            return ResponseEntity.ok(Map.of(
+                    "message", "Login successful.",
                     "role", role,
-                    "token", token
+                    "token", token,
+                    "customerId", customerId
             ));
         } else {
             return ResponseEntity.status(401).body(Map.of("message", "Login failed. Invalid email or password!"));
