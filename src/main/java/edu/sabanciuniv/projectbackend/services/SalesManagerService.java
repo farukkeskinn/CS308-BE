@@ -1,5 +1,6 @@
 package edu.sabanciuniv.projectbackend.services;
 
+import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.models.SalesManager;
 import edu.sabanciuniv.projectbackend.repositories.SalesManagerRepository;
 import org.springframework.stereotype.Service;
@@ -29,5 +30,9 @@ public class SalesManagerService {
 
     public void deleteSalesManager(String smId) {
         salesManagerRepository.deleteById(smId);
+    }
+
+    public List<Order> getAllOrders() {
+        return salesManagerRepository.findAllOrders();
     }
 }

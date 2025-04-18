@@ -13,7 +13,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -64,7 +66,7 @@ public class ProductController {
 
         List<ReviewResponse> reviewResponses = reviewService.getReviewsByProductId(productId)
                 .stream()
-                .map(review -> new ReviewResponse(review.getRating(), review.getComment()))
+                .map(review -> new ReviewResponse(review.getRating(), review.getComment(), review.getApprovalStatus()))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(new ProductDetailsResponse(
@@ -101,5 +103,14 @@ public class ProductController {
 
         Page<Product> recommendedProducts = productService.getRecommendedProducts(product.getCategory().getCategoryId(), productId, pageable);
         return ResponseEntity.ok(recommendedProducts);
+    }
+
+    @GetMapping("/{id}/name")
+    public ResponseEntity<Map<String,String>> getProductName(@PathVariable String id) {
+        Product p = productService.getProductById(id);
+        if (p == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(Collections.singletonMap("name", p.getName()));
     }
 }

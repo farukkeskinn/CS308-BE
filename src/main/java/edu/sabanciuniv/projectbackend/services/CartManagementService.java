@@ -1,5 +1,6 @@
 package edu.sabanciuniv.projectbackend.services;
 
+import edu.sabanciuniv.projectbackend.models.Customer;
 import edu.sabanciuniv.projectbackend.dto.AddItemRequest;
 import edu.sabanciuniv.projectbackend.dto.MergeCartRequest;
 import edu.sabanciuniv.projectbackend.models.ShoppingCart;
@@ -115,6 +116,18 @@ public class CartManagementService {
         return cart; // If stock is sufficient, item is added; otherwise, return null
     }
 
+
+    public void logoutAndClearCart(String customerId) {
+        var customer = customerService.getCustomerById(customerId);
+        if (customer == null) return;
+
+        var cart = cartRepository.findByCustomer(customer);
+        if (cart == null) return;
+
+        clearCart(cart.getCartId());
+    }
+
+
     /**
      * 2) Remove a single item (by itemId) from cart
      */
@@ -176,6 +189,7 @@ public class CartManagementService {
     public ShoppingCart mergeGuestCart(MergeCartRequest request) {
         // Find user
         var customer = customerService.getCustomerById(request.getCustomerId());
+
         if (customer == null) {
             return null;  // Not due to stock, but user not found -> return null
         }
@@ -230,6 +244,12 @@ public class CartManagementService {
             }
         }
 
+        // Eğer sepete en az 1 ürün eklendiyse, durumu ACTIVE yap
+        if (!cart.getShoppingCartItems().isEmpty()) {
+            cart.setCartStatus("ACTIVE");
+            cartRepository.save(cart);
+        }
+
         return cart; // merge if stock is sufficient
     }
 
@@ -248,6 +268,17 @@ public class CartManagementService {
         }
         return total;
     }
+
+
+
+    public Customer getCustomerById(String customerId) {
+        return customerService.getCustomerById(customerId);
+    }
+
+    public ShoppingCart getCartByCustomer(Customer customer) {
+        return cartRepository.findByCustomer(customer);
+    }
+
 
     public void removePartialQuantity(String itemId, int quantityToRemove) {
         // 1) Find item

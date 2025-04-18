@@ -1,6 +1,8 @@
 package edu.sabanciuniv.projectbackend.models;
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "salesmanagers")
 public class SalesManager {
@@ -20,6 +22,9 @@ public class SalesManager {
 
     @Column(nullable = false)
     private String password;
+
+    @OneToMany(mappedBy = "salesManager")
+    private List<Order> orders;
 
     // Constructors, Getters, Setters
     public String getSmId() {

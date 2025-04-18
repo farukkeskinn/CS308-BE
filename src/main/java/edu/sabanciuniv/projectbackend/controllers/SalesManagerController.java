@@ -1,5 +1,6 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
+import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.models.SalesManager;
 import edu.sabanciuniv.projectbackend.services.SalesManagerService;
 import org.springframework.web.bind.annotation.*;
@@ -36,4 +37,10 @@ public class SalesManagerController {
     public void deleteSalesManager(@PathVariable("id") String smId) {
         salesManagerService.deleteSalesManager(smId);
     }
+
+    @GetMapping("/orders")
+    public List<Order> getAllOrders() {
+        return salesManagerService.getAllOrders();
+    }
+
 }

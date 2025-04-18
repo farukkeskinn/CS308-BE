@@ -1,7 +1,9 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
+import edu.sabanciuniv.projectbackend.models.Product;
 import edu.sabanciuniv.projectbackend.models.ProductManager;
 import edu.sabanciuniv.projectbackend.services.ProductManagerService;
+import edu.sabanciuniv.projectbackend.services.ProductService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,7 +15,7 @@ public class ProductManagerController {
 
     private final ProductManagerService productManagerService;
 
-    public ProductManagerController(ProductManagerService productManagerService) {
+    public ProductManagerController(ProductManagerService productManagerService, ProductService productService) {
         this.productManagerService = productManagerService;
     }
 
@@ -36,4 +38,7 @@ public class ProductManagerController {
     public void deleteProductManager(@PathVariable("id") String pmId) {
         productManagerService.deleteProductManager(pmId);
     }
+
 }
+
+
