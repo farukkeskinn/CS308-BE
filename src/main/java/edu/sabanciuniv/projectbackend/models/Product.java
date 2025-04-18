@@ -2,6 +2,7 @@ package edu.sabanciuniv.projectbackend.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
 public class Product {
 
     @Id
+    @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "product_id", columnDefinition = "CHAR(36)")
     private String productId;
 
@@ -116,5 +118,22 @@ public class Product {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public void setProductId(String productId) { this.productId = productId; }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public void setItemSold(Integer itemSold) {
+        this.itemSold = itemSold;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }

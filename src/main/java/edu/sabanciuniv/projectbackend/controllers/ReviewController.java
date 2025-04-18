@@ -17,11 +17,6 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
-    @GetMapping
-    public List<Review> getAllReviews() {
-        return reviewService.getAllReviews();
-    }
-
     @GetMapping("/{id}")
     public Review getReviewById(@PathVariable("id") String reviewId) {
         return reviewService.getReview(reviewId);
@@ -35,5 +30,20 @@ public class ReviewController {
     @DeleteMapping("/{id}")
     public void deleteReview(@PathVariable("id") String reviewId) {
         reviewService.deleteReview(reviewId);
+    }
+
+    @PatchMapping("/{reviewId}/approval")
+    public Review updateReviewApprovalStatus(
+            @PathVariable("reviewId") String reviewId,
+            @RequestParam("status") String status) {
+        return reviewService.updateReviewStatus(reviewId, status);
+    }
+
+    @GetMapping
+    public List<Review> getReviews(@RequestParam(value="status", required=false) String status) {
+        if ("pending".equalsIgnoreCase(status)) {
+            return reviewService.getPendingReviews();
+        }
+        return reviewService.getAllReviews();
     }
 }
