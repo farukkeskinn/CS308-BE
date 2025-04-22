@@ -4,10 +4,10 @@ import edu.sabanciuniv.projectbackend.models.Customer;
 import edu.sabanciuniv.projectbackend.models.ShoppingCart;
 import edu.sabanciuniv.projectbackend.repositories.CustomerRepository;
 import edu.sabanciuniv.projectbackend.repositories.ShoppingCartRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class CustomerService {
@@ -30,13 +30,11 @@ public class CustomerService {
     }
 
     public Customer saveCustomer(Customer customer) {
-
         Customer saved = customerRepository.save(customer);
 
-        ShoppingCart existing = shoppingCartRepository.findByCustomer(saved);
-        if (existing == null) {
+        if (shoppingCartRepository.findByCustomer(saved) == null) {
             ShoppingCart cart = new ShoppingCart();
-            cart.setCartId(saved.getCustomerId());
+            cart.setCartId(UUID.randomUUID().toString());
             cart.setCartStatus("EMPTY");
             cart.setCustomer(saved);
             shoppingCartRepository.save(cart);
@@ -53,11 +51,10 @@ public class CustomerService {
         return getCustomer(customerId);
     }
 
-
     public String getCustomerIdByEmail(String email) {
         Customer customer = customerRepository.findByEmail(email);
         if (customer != null) {
-            return customer.getCustomerId(); // Ensure this returns a String
+            return customer.getCustomerId();
         }
         throw new RuntimeException("Customer not found with email: " + email);
     }

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ShoppingCartItemRepository extends JpaRepository<ShoppingCartItem, String> {
-
+    long countByShoppingCart_CartId(String cartId);
     @Query("SELECT i FROM ShoppingCartItem i " +
             "WHERE i.shoppingCart.cartId = :cartId " +
             "  AND i.product.productId = :productId")

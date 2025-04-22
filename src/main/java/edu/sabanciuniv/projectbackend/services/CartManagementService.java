@@ -46,64 +46,55 @@ public class CartManagementService {
      *        - If new item -> check stock, if insufficient return error, otherwise add
      */
     public ShoppingCart addItemToCart(AddItemRequest request) {
-        // 1) Is this a GUEST?
+        // 1) GUEST flow
         if (request.getCustomerId() == null || request.getCustomerId().isBlank()) {
-            // Not saving to DB -> GUEST flow
-            // [*TO BE ADDED*] return a 'dummy' cart
             ShoppingCart dummyCart = new ShoppingCart();
-            dummyCart.setCartId("GUEST_FLOW"); // special ID
+            dummyCart.setCartId("GUEST_FLOW");
             return dummyCart;
         }
 
-        // 2) USER (find customer)
+        // 2) Get customer
         var customer = customerService.getCustomerById(request.getCustomerId());
         if (customer == null) {
-            // Customer not found -> return null
             return null;
         }
 
-        // 3) Find or create cart
+        // 3) Get or create cart
         ShoppingCart cart = cartRepository.findByCustomer(customer);
         if (cart == null) {
             cart = new ShoppingCart();
             cart.setCartId(UUID.randomUUID().toString());
-            cart.setCartStatus("ACTIVE");
+            cart.setCartStatus("EMPTY");
             cart.setCustomer(customer);
             cartRepository.save(cart);
         }
 
-        // 4) Find product
+        // 4) Get product
         var product = productService.getProductById(request.getProductId());
         if (product == null) {
-            // Product not found -> return null
             return null;
         }
 
-        // 5) Is this product already in cart?
-        ShoppingCartItem existingItem =
-                cartItemRepository.findByCartIdAndProductId(cart.getCartId(), product.getProductId());
+        // 5) Stock check
+        ShoppingCartItem existingItem = cartItemRepository
+                .findByCartIdAndProductId(cart.getCartId(), product.getProductId());
 
         if (existingItem != null) {
-            // Existing item
             int newQuantity = existingItem.getQuantity() + request.getQuantity();
-            // STOCK CHECK
             if (newQuantity > product.getStock()) {
-                // NOT ENOUGH STOCK -> JUST return null
                 return null;
             }
-            // Stock sufficient -> increase item quantity
             existingItem.setQuantity(newQuantity);
             cartItemRepository.save(existingItem);
 
+            product.setStock(product.getStock() - request.getQuantity());
+            productService.saveProduct(product);
 
         } else {
-            // New item
             if (request.getQuantity() > product.getStock()) {
-                // NO STOCK -> return null
                 return null;
             }
 
-            // Add new row
             ShoppingCartItem newItem = new ShoppingCartItem();
             newItem.setShoppingCartItemId(UUID.randomUUID().toString());
             newItem.setShoppingCart(cart);
@@ -111,10 +102,20 @@ public class CartManagementService {
             newItem.setQuantity(request.getQuantity());
             cartItemRepository.save(newItem);
 
+            product.setStock(product.getStock() - request.getQuantity());
+            productService.saveProduct(product);
         }
 
-        return cart; // If stock is sufficient, item is added; otherwise, return null
+        // ✅ Fix: Kart durumu güncelleniyor
+        long itemCount = cartItemRepository.countByShoppingCart_CartId(cart.getCartId());
+        if (itemCount > 0 && !"ACTIVE".equals(cart.getCartStatus())) {
+            cart.setCartStatus("ACTIVE");
+            cartRepository.save(cart);
+        }
+
+        return cart;
     }
+
 
 
     public void logoutAndClearCart(String customerId) {
@@ -134,21 +135,34 @@ public class CartManagementService {
     public void removeItemFromCart(String itemId) {
         // 1) Find item
         ShoppingCartItem item = cartItemRepository.findById(itemId).orElse(null);
-        if (item == null) {
-            return;
-        }
+        if (item == null) return;
 
-        // 2) Return quantity to stock
+        // 2) Return stock
         Product product = item.getProduct();
         if (product != null) {
-            int addBack = item.getQuantity();
-            product.setStock(product.getStock() + addBack);
+            product.setStock(product.getStock() + item.getQuantity());
             productService.saveProduct(product);
         }
 
-        // 3) Delete item
+        // 3) Get cart ID
+        String cartId = item.getShoppingCart().getCartId();
+
+        // 4) Delete item
         cartItemRepository.deleteById(itemId);
+
+        // 5) Check cart status AFTER deletion
+        ShoppingCart cart = cartRepository.findById(cartId).orElse(null);
+        if (cart != null) {
+            boolean isNowEmpty = cartItemRepository.findAll().stream()
+                    .filter(i -> i.getShoppingCart().getCartId().equals(cartId))
+                    .count() == 0;
+
+            cart.setCartStatus(isNowEmpty ? "EMPTY" : "ACTIVE");
+            cartRepository.save(cart);
+        }
     }
+
+
 
     /**
      * 3) Completely clear a specific cart
@@ -180,6 +194,15 @@ public class CartManagementService {
         // 3) Clear item list in memory as well
         items.clear();
         cartRepository.save(cart);
+
+        // En sona ekle
+        long updatedCount = cartItemRepository.countByShoppingCart_CartId(cart.getCartId());
+        String newStatus = (updatedCount == 0) ? "EMPTY" : "ACTIVE";
+        if (!cart.getCartStatus().equals(newStatus)) {
+            cart.setCartStatus(newStatus);
+            cartRepository.save(cart);
+        }
+
     }
 
     /**
@@ -281,37 +304,39 @@ public class CartManagementService {
 
 
     public void removePartialQuantity(String itemId, int quantityToRemove) {
-        // 1) Find item
         ShoppingCartItem item = cartItemRepository.findById(itemId).orElse(null);
-        if (item == null) {
-            return;
-        }
+        if (item == null) return;
 
-        // [ADDED] Find product
         Product product = item.getProduct();
-        if (product == null) {
-            return;
-        }
+        if (product == null) return;
 
         int currentQty = item.getQuantity();
         int newQty = currentQty - quantityToRemove;
+        String cartId = item.getShoppingCart().getCartId();
 
         if (newQty <= 0) {
-            // [ADDED] Return all quantity to stock
+            // Remove completely
             product.setStock(product.getStock() + currentQty);
             productService.saveProduct(product);
-
-            // Delete item completely
             cartItemRepository.deleteById(itemId);
-
         } else {
-            // [ADDED] Partial decrease -> return quantityToRemove to stock
+            // Decrease partially
             product.setStock(product.getStock() + quantityToRemove);
             productService.saveProduct(product);
-
-            // Update item quantity
             item.setQuantity(newQty);
             cartItemRepository.save(item);
         }
+
+        // Final check for cart status
+        ShoppingCart cart = cartRepository.findById(cartId).orElse(null);
+        if (cart != null) {
+            boolean isNowEmpty = cartItemRepository.findAll().stream()
+                    .filter(i -> i.getShoppingCart().getCartId().equals(cartId))
+                    .count() == 0;
+
+            cart.setCartStatus(isNowEmpty ? "EMPTY" : "ACTIVE");
+            cartRepository.save(cart);
+        }
     }
+
 }
