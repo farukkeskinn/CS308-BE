@@ -19,6 +19,7 @@ public class AuthController {
 
     @Autowired
     private CustomerService CustomerService; // Inject CustomerService
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         String email = loginRequest.getEmail();
@@ -32,13 +33,22 @@ public class AuthController {
 
         if (role != null) {
             String token = JWTUtil.generateToken(role, email);
-            String customerId = String.valueOf(CustomerService.getCustomerIdByEmail(email)); // Use CustomerService to get customerId
-            return ResponseEntity.ok(Map.of(
-                    "message", "Login successful.",
-                    "role", role,
-                    "token", token,
-                    "customerId", customerId
-            ));
+
+            if (role.equals("CUSTOMER")) {
+                String customerId = String.valueOf(CustomerService.getCustomerIdByEmail(email));
+                return ResponseEntity.ok(Map.of(
+                        "message", "Login successful.",
+                        "role", role,
+                        "token", token,
+                        "customerId", customerId
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                        "message", "Login successful.",
+                        "role", role,
+                        "token", token
+                ));
+            }
         } else {
             return ResponseEntity.status(401).body(Map.of("message", "Login failed. Invalid email or password!"));
         }
