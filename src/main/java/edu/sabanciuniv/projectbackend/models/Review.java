@@ -15,10 +15,12 @@ public class Review {
 
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
+    @JsonBackReference
     private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonBackReference
     private Product product;
 
     @Column(nullable = false)

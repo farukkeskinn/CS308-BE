@@ -87,8 +87,6 @@ public class CartManagementService {
             existingItem.setQuantity(newQuantity);
             cartItemRepository.save(existingItem);
 
-            product.setStock(product.getStock() - request.getQuantity());
-            productService.saveProduct(product);
 
         } else {
             if (request.getQuantity() > product.getStock()) {
@@ -102,8 +100,6 @@ public class CartManagementService {
             newItem.setQuantity(request.getQuantity());
             cartItemRepository.save(newItem);
 
-            product.setStock(product.getStock() - request.getQuantity());
-            productService.saveProduct(product);
         }
 
         // ✅ Fix: Kart durumu güncelleniyor
@@ -139,10 +135,6 @@ public class CartManagementService {
 
         // 2) Return stock
         Product product = item.getProduct();
-        if (product != null) {
-            product.setStock(product.getStock() + item.getQuantity());
-            productService.saveProduct(product);
-        }
 
         // 3) Get cart ID
         String cartId = item.getShoppingCart().getCartId();
@@ -176,14 +168,6 @@ public class CartManagementService {
         // Get all items
         List<ShoppingCartItem> items = cart.getShoppingCartItems();
 
-        // 1) Return each item's quantity to stock
-        for (ShoppingCartItem item : items) {
-            Product product = item.getProduct();
-            if (product != null) {
-                product.setStock(product.getStock() + item.getQuantity());
-                productService.saveProduct(product);
-            }
-        }
 
         // 2) Delete items from DB
         // -> Method A: deleteById one by one
@@ -239,7 +223,7 @@ public class CartManagementService {
                     .findByCartIdAndProductId(cart.getCartId(), product.getProductId());
 
             if (existing != null) {
-                int mergedQty = existing.getQuantity() + guestItem.getQuantity();
+                int mergedQty = existing.getQuantity();
                 // STOCK CHECK
                 if (mergedQty > product.getStock()) {
                     // INSUFFICIENT STOCK -> return null, cancel merge
@@ -248,7 +232,6 @@ public class CartManagementService {
                 existing.setQuantity(mergedQty);
                 cartItemRepository.save(existing);
 
-                product.setStock(product.getStock() - guestItem.getQuantity());
                 productService.saveProduct(product);
             } else {
                 if (guestItem.getQuantity() > product.getStock()) {
@@ -262,7 +245,6 @@ public class CartManagementService {
                 newItem.setQuantity(guestItem.getQuantity());
                 cartItemRepository.save(newItem);
 
-                product.setStock(product.getStock() - guestItem.getQuantity());
                 productService.saveProduct(product);
             }
         }
@@ -311,17 +293,15 @@ public class CartManagementService {
         if (product == null) return;
 
         int currentQty = item.getQuantity();
-        int newQty = currentQty - quantityToRemove;
+        int newQty = currentQty;
         String cartId = item.getShoppingCart().getCartId();
 
         if (newQty <= 0) {
             // Remove completely
-            product.setStock(product.getStock() + currentQty);
             productService.saveProduct(product);
             cartItemRepository.deleteById(itemId);
         } else {
             // Decrease partially
-            product.setStock(product.getStock() + quantityToRemove);
             productService.saveProduct(product);
             item.setQuantity(newQty);
             cartItemRepository.save(item);
