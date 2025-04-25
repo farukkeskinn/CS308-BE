@@ -1,17 +1,13 @@
 package edu.sabanciuniv.projectbackend.services;
 
-import edu.sabanciuniv.projectbackend.models.Admin;
-import edu.sabanciuniv.projectbackend.models.Customer;
-import edu.sabanciuniv.projectbackend.models.ProductManager;
-import edu.sabanciuniv.projectbackend.models.SalesManager;
-import edu.sabanciuniv.projectbackend.repositories.AdminRepository;
-import edu.sabanciuniv.projectbackend.repositories.CustomerRepository;
-import edu.sabanciuniv.projectbackend.repositories.ProductManagerRepository;
-import edu.sabanciuniv.projectbackend.repositories.SalesManagerRepository;
+import edu.sabanciuniv.projectbackend.models.*;
+import edu.sabanciuniv.projectbackend.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -29,33 +25,41 @@ public class AuthService {
     @Autowired
     private SalesManagerRepository smRepo;
 
+    @Autowired
+    private ShoppingCartRepository shoppingCartRepository;
+
     public String register(String firstName, String lastName, String email, String password) {
         if (customerRepo.findByEmail(email) == null) {
             String encryptedPassword = passwordEncoder.encode(password);
             Customer newCustomer = new Customer(firstName, lastName, email, encryptedPassword);
-            customerRepo.save(newCustomer);
+            Customer saved = customerRepo.save(newCustomer);
+
+            if (shoppingCartRepository.findByCustomer(saved) == null) {
+                ShoppingCart cart = new ShoppingCart();
+                cart.setCartId(UUID.randomUUID().toString());
+                cart.setCartStatus("EMPTY");
+                cart.setCustomer(saved);
+                shoppingCartRepository.save(cart);
+            }
+
             return "CUSTOMER";
         }
         return null;
     }
 
     public String login(String email, String password) {
-        // Convert email to lowercase for consistent lookup
         email = email.toLowerCase().trim();
 
-        // 1) CUSTOMER
         Customer customer = customerRepo.findByEmail(email);
         if (customer != null && passwordEncoder.matches(password, customer.getPassword())) {
             return "CUSTOMER";
         }
 
-        // 2) PRODUCT_MANAGER
         ProductManager pm = pmRepo.findByEmail(email);
         if (pm != null && passwordEncoder.matches(password, pm.getPassword())) {
             return "PRODUCT_MANAGER";
         }
 
-        // 3) SALES_MANAGER
         SalesManager sm = smRepo.findByEmail(email);
         if (sm != null && passwordEncoder.matches(password, sm.getPassword())) {
             return "SALES_MANAGER";
@@ -64,4 +68,3 @@ public class AuthService {
         return null;
     }
 }
-

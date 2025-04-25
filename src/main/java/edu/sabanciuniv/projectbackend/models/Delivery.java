@@ -12,30 +12,32 @@ public class Delivery {
     @Column(name = "delivery_status", nullable = false)
     private String deliveryStatus;
 
-    // Relationship to Order
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    // Relationship to Address
     @ManyToOne
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
 
-    // Constructors, Getters, Setters
-    public String getDeliveryId() {
-        return deliveryId;
+    public String getDeliveryId() { return deliveryId; }
+    public String getDeliveryStatus() { return deliveryStatus; }
+    public Order getOrder() { return order; }
+    public Address getAddress() { return address; }
+
+    public void setDeliveryId(String deliveryId) {
+        this.deliveryId = deliveryId;
     }
 
-    public Order getOrder() {
-        return order;
+    public void setDeliveryStatus(String deliveryStatus) {
+        this.deliveryStatus = deliveryStatus;
     }
 
-    public String getDeliveryStatus() {
-        return deliveryStatus;
+    public void setOrder(Order order) {
+        this.order = order;
     }
 
-    public Address getAddress() {
-        return address;
+    public void setAddress(Address address) {
+        this.address = address;
     }
 }

@@ -3,67 +3,84 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reviews")
 public class Review {
 
     @Id
-    @Column(name = "review_id", columnDefinition = "CHAR(36)")
+    @Column(name = "review_id", length = 36)
     private String reviewId;
 
+    @ManyToOne
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
     @Column(nullable = false)
-    private Integer rating;
+    private int rating;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
 
+    @Column(name = "review_date", nullable = false)
+    private LocalDateTime reviewDate;
+
     @Column(name = "approval_status", nullable = false)
     private String approvalStatus;
 
-    // Relationship to Customer
-    @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false)
-    @JsonIgnore
-    private Customer customer;
+    // --- getters & setters ---
 
-    // Relationship to Product
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    @JsonBackReference
-    private Product product;
-
-    // Constructors, Getters, Setters
     public String getReviewId() {
         return reviewId;
     }
-
-    public Integer getRating() {
-        return rating;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public String getApprovalStatus() {
-        return approvalStatus;
+    public void setReviewId(String reviewId) {
+        this.reviewId = reviewId;
     }
 
     public Customer getCustomer() {
         return customer;
     }
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
 
     public Product getProduct() {
         return product;
     }
-
-    public void setApprovalStatus(String approvalStatus) {
-        this.approvalStatus = approvalStatus;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
-    @JsonProperty("productId")
-    public String getProductId() {
-        return product == null ? null : product.getProductId();
+    public int getRating() {
+        return rating;
+    }
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public LocalDateTime getReviewDate() {
+        return reviewDate;
+    }
+    public void setReviewDate(LocalDateTime reviewDate) {
+        this.reviewDate = reviewDate;
+    }
+
+    public String getApprovalStatus() {
+        return approvalStatus;
+    }
+    public void setApprovalStatus(String approvalStatus) {
+        this.approvalStatus = approvalStatus;
     }
 }

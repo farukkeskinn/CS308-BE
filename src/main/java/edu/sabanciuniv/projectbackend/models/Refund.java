@@ -1,6 +1,5 @@
 package edu.sabanciuniv.projectbackend.models;
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,38 +19,44 @@ public class Refund {
     @Column(name = "refund_amount", nullable = false)
     private Double refundAmount;
 
-    // Relationship to Order
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    // Relationship to OrderItem (unique constraint)
     @OneToOne
     @JoinColumn(name = "order_item_id", nullable = false, unique = true)
     private OrderItem orderItem;
 
-    // Constructors, Getters, Setters
-    public String getRefundId() {
-        return refundId;
+    // ----- GETTERS -----
+    public String getRefundId() { return refundId; }
+    public LocalDateTime getRequestDate() { return requestDate; }
+    public String getRefundStatus() { return refundStatus; }
+    public Double getRefundAmount() { return refundAmount; }
+    public Order getOrder() { return order; }
+    public OrderItem getOrderItem() { return orderItem; }
+
+    // ----- SETTERS (EKLENDİ) -----
+    public void setRefundId(String refundId) {
+        this.refundId = refundId;
     }
 
-    public Order getOrder() {
-        return order;
+    public void setRequestDate(LocalDateTime requestDate) {
+        this.requestDate = requestDate;
     }
 
-    public OrderItem getOrderItem() {
-        return orderItem;
+    public void setRefundStatus(String refundStatus) {
+        this.refundStatus = refundStatus;
     }
 
-    public LocalDateTime getRequestDate() {
-        return requestDate;
+    public void setRefundAmount(Double refundAmount) {
+        this.refundAmount = refundAmount;
     }
 
-    public String getRefundStatus() {
-        return refundStatus;
+    public void setOrder(Order order) {
+        this.order = order;
     }
 
-    public Double getRefundAmount() {
-        return refundAmount;
+    public void setOrderItem(OrderItem orderItem) {
+        this.orderItem = orderItem;
     }
 }

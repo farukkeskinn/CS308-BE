@@ -1,18 +1,31 @@
 package edu.sabanciuniv.projectbackend.services;
 
+import edu.sabanciuniv.projectbackend.models.Customer;
+import edu.sabanciuniv.projectbackend.models.Product;
 import edu.sabanciuniv.projectbackend.models.Review;
+import edu.sabanciuniv.projectbackend.repositories.CustomerRepository;
+import edu.sabanciuniv.projectbackend.repositories.ProductRepository;
 import edu.sabanciuniv.projectbackend.repositories.ReviewRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ReviewService {
-    private final ReviewRepository reviewRepository;
 
-    public ReviewService(ReviewRepository reviewRepository) {
+    private final ReviewRepository reviewRepository;
+    private final CustomerRepository customerRepository;
+    private final ProductRepository productRepository;
+
+    public ReviewService(ReviewRepository reviewRepository,
+                         CustomerRepository customerRepository,
+                         ProductRepository productRepository) {
         this.reviewRepository = reviewRepository;
+        this.customerRepository = customerRepository;
+        this.productRepository = productRepository;
     }
 
     public List<Review> getAllReviews() {
@@ -27,14 +40,8 @@ public class ReviewService {
         return reviewRepository.findByProduct_ProductId(productId);
     }
 
-    public Review saveReview(Review review) {
-        // Force the approvalStatus to "pending", regardless of what is sent from the frontend
-        review.setApprovalStatus("pending");
-        return reviewRepository.save(review);
-    }
-
-    public void deleteReview(String reviewId) {
-        reviewRepository.deleteById(reviewId);
+    public List<Review> getReviewsByCustomerId(String customerId) {
+        return reviewRepository.findByCustomer_CustomerId(customerId);
     }
 
     public List<Review> getPendingReviews() {
@@ -44,9 +51,30 @@ public class ReviewService {
     @Transactional
     public Review updateReviewStatus(String reviewId, String newStatus) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found with ID: " + reviewId));
+                .orElseThrow(() -> new RuntimeException("Review not found: " + reviewId));
         review.setApprovalStatus(newStatus);
         return reviewRepository.save(review);
     }
 
+    @Transactional
+    public Review submitReview(String customerId,
+                               String productId,
+                               int rating,
+                               String comment) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found: " + customerId));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found: " + productId));
+
+        Review review = new Review();
+        review.setReviewId(UUID.randomUUID().toString());
+        review.setCustomer(customer);
+        review.setProduct(product);
+        review.setRating(rating);
+        review.setComment(comment);
+        review.setReviewDate(LocalDateTime.now());
+        review.setApprovalStatus("pending");
+
+        return reviewRepository.save(review);
+    }
 }

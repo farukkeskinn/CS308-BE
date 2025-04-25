@@ -2,6 +2,7 @@ package edu.sabanciuniv.projectbackend.services;
 
 import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.models.Payment;
+import edu.sabanciuniv.projectbackend.models.Address;
 import edu.sabanciuniv.projectbackend.repositories.PaymentRepository;
 import org.springframework.stereotype.Service;
 import edu.sabanciuniv.projectbackend.dto.InvoiceResponse;
@@ -27,11 +28,14 @@ public class PaymentService {
     private final ShoppingCartService shoppingCartService;
     private final ProductRepository productRepository;
 
+
+    private final AddressService addressService;
+
     public PaymentService(PaymentRepository paymentRepository,
                           ShoppingCartService cartService,
                           OrderService orderService,
                           EmailService emailService,
-                          InvoiceGeneratorService invoiceGeneratorService, ShoppingCartService shoppingCartService, ProductRepository productRepository) {
+                          InvoiceGeneratorService invoiceGeneratorService, ShoppingCartService shoppingCartService, ProductRepository productRepository, AddressService addressService) {
         this.paymentRepository = paymentRepository;
         this.cartService = cartService;
         this.orderService = orderService;
@@ -39,6 +43,7 @@ public class PaymentService {
         this.invoiceGeneratorService = invoiceGeneratorService;
         this.shoppingCartService = shoppingCartService;
         this.productRepository = productRepository;
+        this.addressService = addressService;
     }
 
     public List<Payment> getAllPayments() {
@@ -115,12 +120,31 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         // 📄 7️⃣ Fatura PDF oluştur
-        String pdfPath = invoiceGeneratorService.generateInvoicePdf(order);
+        String pdfPath = invoiceGeneratorService.generateInvoicePdf(order, request);
 
         // 📧 8️⃣ E-posta gönder
         emailService.sendInvoiceEmail(order.getCustomer().getEmail(), pdfPath);
 
         shoppingCartService.clearCart(username);
+
+
+        // 🔟 Adresi adresses tablosuna ekle
+        Address address = new Address();
+        address.setAddressId(UUID.randomUUID().toString());
+
+        String addressLine = request.getAddress() + ", " +
+                request.getCity() + ", " +
+                request.getCountry() + ", " +
+                request.getZipCode();
+        String addressName = request.getAddressName();
+
+        address.setAddressLine(addressLine);
+        address.setAddressName(addressName);
+        address.setCustomer(order.getCustomer()); // veya order.getCustomer().getCustomerId() eğer UUID string
+
+        addressService.saveAddress(address);
+
+
 
         // 9️⃣ Yanıtı hazırla
         InvoiceResponse response = new InvoiceResponse();
