@@ -1,6 +1,6 @@
 package edu.sabanciuniv.projectbackend.models;
 import jakarta.persistence.*;
-
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.ArrayList;
 import java.util.List;
 @Entity
@@ -27,6 +27,7 @@ public class Customer {
     // -- Relationships --
     // 1) One customer has many addresses:
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Address> addresses = new ArrayList<>();
 
     // 2) One customer can have many orders:
