@@ -13,8 +13,6 @@ public class Address {
     @Column(name = "address_line", nullable = false, columnDefinition = "TEXT")
     private String addressLine;
 
-    @Column(name = "address_type", nullable = false)
-    private String addressType;
 
     @Column(name = "address_name")
     private String addressName;
@@ -33,10 +31,6 @@ public class Address {
         return addressLine;
     }
 
-    public String getAddressType() {
-        return addressType;
-    }
-
     public String getAddressName() {
         return addressName;
     }
@@ -44,4 +38,12 @@ public class Address {
     public Customer getCustomer() {
         return customer;
     }
+
+    public void setAddressId(String addressId) { this.addressId = addressId; }
+
+    public void setAddressLine(String addressLine) { this.addressLine = addressLine; }
+
+    public void setAddressName(String addressName) { this.addressName = addressName; }
+
+    public void setCustomer(Customer customer) { this.customer = customer; }
 }
