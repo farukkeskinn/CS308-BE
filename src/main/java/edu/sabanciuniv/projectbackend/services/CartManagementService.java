@@ -287,27 +287,24 @@ public class CartManagementService {
 
     public void removePartialQuantity(String itemId, int quantityToRemove) {
         ShoppingCartItem item = cartItemRepository.findById(itemId).orElse(null);
-        if (item == null) return;
-
-        Product product = item.getProduct();
-        if (product == null) return;
+        if (item == null) {
+            return;
+        }
 
         int currentQty = item.getQuantity();
-        int newQty = currentQty;
+        int newQty = currentQty - quantityToRemove;
         String cartId = item.getShoppingCart().getCartId();
 
         if (newQty <= 0) {
-            // Remove completely
-            productService.saveProduct(product);
+            // Quantity became 0 or less ➔ delete item completely
             cartItemRepository.deleteById(itemId);
         } else {
-            // Decrease partially
-            productService.saveProduct(product);
+            // Partial decrease ➔ just update quantity
             item.setQuantity(newQty);
             cartItemRepository.save(item);
         }
 
-        // Final check for cart status
+        // ✅ Update cart status (ACTIVE or EMPTY)
         ShoppingCart cart = cartRepository.findById(cartId).orElse(null);
         if (cart != null) {
             boolean isNowEmpty = cartItemRepository.findAll().stream()
@@ -318,5 +315,6 @@ public class CartManagementService {
             cartRepository.save(cart);
         }
     }
+
 
 }
