@@ -122,6 +122,9 @@ public class PaymentService {
         // 📄 7️⃣ Fatura PDF oluştur
         String pdfPath = invoiceGeneratorService.generateInvoicePdf(order, request);
 
+        order.setInvoiceLink(pdfPath);
+        orderService.saveOrder(order);
+
         // 📧 8️⃣ E-posta gönder
         emailService.sendInvoiceEmail(order.getCustomer().getEmail(), pdfPath);
 
