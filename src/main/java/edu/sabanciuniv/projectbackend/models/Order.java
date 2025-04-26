@@ -103,4 +103,9 @@ public class Order {
         this.orderItems = orderItems;
     }
 
+    public void setInvoiceLink(String invoiceLink) {
+        this.invoiceLink = invoiceLink;
+    }
+
+
 }

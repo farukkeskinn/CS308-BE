@@ -42,7 +42,8 @@ public class OrderController {
                         item.getProduct().getName(),
                         item.getPriceAtPurchase(),
                         item.getQuantity()
-                )).collect(Collectors.toList())
+                )).collect(Collectors.toList()),
+                order.getInvoiceLink()
         );
 
         return ResponseEntity.ok(dto);
@@ -73,7 +74,8 @@ public class OrderController {
                                 item.getProduct().getName(),
                                 item.getPriceAtPurchase(),
                                 item.getQuantity()
-                        )).collect(Collectors.toList())
+                        )).collect(Collectors.toList()),
+                        order.getInvoiceLink()
                 ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(result);
