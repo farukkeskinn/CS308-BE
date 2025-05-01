@@ -46,6 +46,7 @@ public class ReviewController {
                     .stream()
                     .map(r -> new ReviewSummaryDTO(
                             r.getReviewId(),
+                            r.getProduct().getProductId(),
                             r.getRating(),
                             r.getComment(),
                             r.getApprovalStatus(),
