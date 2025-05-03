@@ -5,25 +5,85 @@ build/
 *.jar
 *.war
 *.log
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+.gradletasknamecache
 
 # IntelliJ IDEA
 .idea/
 *.iml
 *.ipr
 *.iws
+out/
 
 # OS / IDE
 .DS_Store
 *.swp
+Thumbs.db
+.Spotlight-V100
+.Trashes
 
 # Compiled files & temp
 out/
 *.bin
 *.lock
 *.tmp
+bin/
+tmp/
 
 # VS Code
 .vscode/
+.code-workspace
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
 
 # Spring Boot
 target/
+application-*.yml
+application-*.properties
+!application.yml
+!application.properties
+
+# Package Files
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# Logs
+logs/
+*.log.*
+log/
+
+# Docker
+.env
+docker-compose.override.yml
+
+# Node (if using frontend tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+# Testing
+**/test-results/
+**/test-output/
+**/reports/
+**/.coverage/
+
+# Misc
+*~
+.nfs*
+.DS_Store?
+._*
+
+# Project specific
+.DS_Store
