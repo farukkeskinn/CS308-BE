@@ -32,4 +32,11 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     List<Product> findByCategory_CategoryId(Integer categoryId);
 
+    List<Product> findByPublished(Boolean published);
+
+    @Query("SELECT p FROM Product p " +
+            "WHERE p.published = true " +
+            "AND p.price > :minPrice")
+    List<Product> findByPublishedTrueAndPriceGreaterThan(Double minPrice);
+
 }

@@ -28,6 +28,7 @@ public class ProductService {
     public Product saveProduct(Product product) {
         if (product.getProductId() == null || product.getProductId().trim().isEmpty()) {
             product.setProductId(UUID.randomUUID().toString());
+            product.setPublished(false);
         }
         return productRepository.save(product);
     }

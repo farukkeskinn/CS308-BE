@@ -1,7 +1,9 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
+import edu.sabanciuniv.projectbackend.models.Category;
 import edu.sabanciuniv.projectbackend.models.Product;
 import edu.sabanciuniv.projectbackend.services.ProductService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,8 +32,25 @@ public class ProductManagementController {
         return productService.getProductById(productId);
     }
 
-    @PostMapping
-    public Product createProduct(@RequestBody Product product) {
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Product createProduct(@RequestBody Map<String, Object> productData) {
+        Product product = new Product();
+        product.setName((String) productData.get("name"));
+        product.setModel((String) productData.get("model"));
+        product.setDescription((String) productData.get("description"));
+        product.setCost(((Number) productData.get("cost")).doubleValue());
+        product.setSerialNumber((String) productData.get("serialNumber"));
+        product.setQuantity(((Number) productData.get("quantity")).intValue());
+        product.setWarranty_status(((Number) productData.get("warranty_status")).intValue());
+        product.setDistributor((String) productData.get("distributor"));
+        product.setImage_url((String) productData.get("image_url"));
+
+        if (productData.containsKey("categoryId")) {
+            Category category = new Category();
+            category.setCategoryId(((Number) productData.get("categoryId")).intValue());
+            product.setCategory(category);
+        }
+
         return productService.saveProduct(product);
     }
 
@@ -40,6 +59,17 @@ public class ProductManagementController {
                                  @RequestBody Product product) {
         // Ensure the product's ID in the payload matches the path variable
         product.setProductId(productId);
+
+        Product existingProduct = productService.getProductById(productId);
+        if (existingProduct != null) {
+            product.setPrice(existingProduct.getPrice());
+            product.setPublished(existingProduct.getPublished());
+
+            if (product.getCost() != existingProduct.getCost()) {
+                product.setCost(existingProduct.getCost());
+            }
+        }
+
         return productService.saveProduct(product);
     }
 
