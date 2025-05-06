@@ -9,6 +9,11 @@ import edu.sabanciuniv.projectbackend.repositories.ReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+import edu.sabanciuniv.projectbackend.models.Order;
+import edu.sabanciuniv.projectbackend.models.OrderItem;
+import edu.sabanciuniv.projectbackend.services.OrderService;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -19,13 +24,17 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final OrderService orderService;
 
     public ReviewService(ReviewRepository reviewRepository,
                          CustomerRepository customerRepository,
-                         ProductRepository productRepository) {
+                         ProductRepository productRepository,
+                         OrderService orderService
+    ) {
         this.reviewRepository = reviewRepository;
         this.customerRepository = customerRepository;
         this.productRepository = productRepository;
+        this.orderService = orderService;
     }
 
     public List<Review> getAllReviews() {
@@ -61,6 +70,17 @@ public class ReviewService {
                                String productId,
                                int rating,
                                String comment) {
+
+        List<Order> orders = orderService.getOrdersByCustomer(customerId);
+        boolean delivered = orders.stream()
+                .filter(order -> "DELIVERED".equalsIgnoreCase(order.getOrderStatus()))
+                .flatMap(order -> order.getOrderItems().stream())
+                .anyMatch(item -> item.getProduct().getProductId().equals(productId));
+
+        if (!delivered) {
+            throw new RuntimeException("Review can be done on only delivered orders.");
+        }
+
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found: " + customerId));
         Product product = productRepository.findById(productId)
