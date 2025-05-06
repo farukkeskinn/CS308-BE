@@ -1,5 +1,6 @@
 package edu.sabanciuniv.projectbackend.models;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -31,6 +32,18 @@ public class Product {
     private Double price;
     private Double cost;
 
+    @Column(name = "discounted")
+    private Boolean discounted = false;
+
+    @Column(name = "discount_percentage")
+    private Integer discountPercentage;
+
+    @Column(name = "discounted_price")
+    private Double discountedPrice;
+
+    @Column(name = "published")
+    private Boolean published = false;
+
     @Column(name = "serial_number", nullable = false)
     private String serialNumber;
 
@@ -43,11 +56,13 @@ public class Product {
     // Relationship to Category
     @ManyToOne
     @JoinColumn(name = "category_id")
+    @JsonBackReference
     private Category category;
 
     // e.g., One product can have many reviews (if you want direct mapping):
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @JsonManagedReference
+    @JsonIgnoreProperties("product")
     private List<Review> reviews = new ArrayList<>();
 
     // Constructors, Getters, Setters
@@ -135,6 +150,54 @@ public class Product {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setCost(Double cost) {
+        this.cost = cost;
+    }
+
+    public void setDiscounted(Boolean discounted) {
+        this.discounted = discounted;
+    }
+
+    public void setDiscountPercentage(Integer discountPercentage) {
+        this.discountPercentage = discountPercentage;
+    }
+
+    public void setDiscountedPrice(Double discountedPrice) {
+        this.discountedPrice = discountedPrice;
+    }
+
+    public Boolean getPublished() {
+        return published != null ? published : false;
+    }
+
+    public void setPublished(Boolean published) {
+        this.published = published;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
+    public void setWarranty_status(Integer warranty_status) {
+        this.warranty_status = warranty_status;
+    }
+
+    public void setDistributor(String distributor) {
+        this.distributor = distributor;
+    }
+
+    public void setImage_url(String image_url) {
+        this.image_url = image_url;
     }
 }
 
