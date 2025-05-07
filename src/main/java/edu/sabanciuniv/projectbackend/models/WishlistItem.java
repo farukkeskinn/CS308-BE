@@ -18,7 +18,6 @@ public class WishlistItem {
     // Relationship to Product
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
-    @JsonIgnore
     private Product product;
 
     // Constructors, Getters, Setters
@@ -33,5 +32,18 @@ public class WishlistItem {
     public Product getProduct() {
         return product;
     }
+
+    public void setWishlist(Wishlist wishlist) {
+        this.wishlist = wishlist;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public void setWishlistItemId(String wishlistItemId) {
+        this.wishlistItemId = wishlistItemId;
+    }
+
 }
 
