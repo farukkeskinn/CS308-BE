@@ -11,6 +11,9 @@ public class OrderSummaryDTO {
     private String paymentStatus;
     private List<OrderItemDTO> orderItems;
     private String invoiceLink;
+    private String addressId;
+    private String addressName;
+    private String addressLine;
 
 
     public OrderSummaryDTO(String orderId, Double totalPrice, LocalDateTime orderDate,
@@ -22,6 +25,9 @@ public class OrderSummaryDTO {
         this.paymentStatus = paymentStatus;
         this.orderItems = orderItems;
         this.invoiceLink = invoiceLink;
+        this.addressId    = addressId;
+        this.addressName  = addressName;
+        this.addressLine  = addressLine;
     }
 
     public String getOrderId() { return orderId; }
