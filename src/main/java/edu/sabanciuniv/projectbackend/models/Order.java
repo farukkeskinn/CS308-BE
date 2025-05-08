@@ -38,6 +38,10 @@ public class Order {
     @JsonIgnore
     private Customer customer;
 
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "address_id", nullable = true)
+    private Address shippingAddress;
+
     // One order can have many order items
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -105,6 +109,13 @@ public class Order {
 
     public void setInvoiceLink(String invoiceLink) {
         this.invoiceLink = invoiceLink;
+    }
+
+    public Address getShippingAddress() {
+        return shippingAddress;
+    }
+    public void setShippingAddress(Address shippingAddress) {
+        this.shippingAddress = shippingAddress;
     }
 
 

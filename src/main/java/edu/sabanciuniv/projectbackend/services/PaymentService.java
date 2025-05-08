@@ -147,6 +147,10 @@ public class PaymentService {
 
         addressService.saveAddress(address);
 
+        // ─── STEP 3: LINK SHIPPING ADDRESS TO ORDER ───
+        // (adds order.address_id → your new Address)
+        order.setShippingAddress(address);
+        orderService.saveOrder(order);
 
 
         // 9️⃣ Yanıtı hazırla
