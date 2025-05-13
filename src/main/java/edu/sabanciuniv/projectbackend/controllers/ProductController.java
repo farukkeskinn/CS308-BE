@@ -34,15 +34,21 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public ResponseEntity<List<ProductPublishedResponse>> getAllProducts() {
+        List<Product> allProducts = productService.getAllProducts();
+
+        List<ProductPublishedResponse> response = allProducts.stream()
+                .map(ProductPublishedResponse::new)
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProduct(@PathVariable("id") String productId) {
+    public ResponseEntity<ProductPublishedResponse> getProduct(@PathVariable("id") String productId) {
         Product product = productService.getProductById(productId);
-        if (product != null) {
-            return ResponseEntity.ok(product);
+        if (product != null && Boolean.TRUE.equals(product.getPublished()) && product.getPrice() != null && product.getPrice() > 0) {
+            return ResponseEntity.ok(new ProductPublishedResponse(product));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -68,33 +74,29 @@ public class ProductController {
 
         List<ReviewResponse> reviewResponses = reviewService.getReviewsByProductId(productId)
                 .stream()
-                .map(review -> new ReviewResponse(review.getRating(), review.getComment(), review.getApprovalStatus()))
+                .map(review -> new ReviewResponse(
+                        review.getRating(),
+                        review.getComment(),
+                        review.getApprovalStatus()))
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(new ProductDetailsResponse(
-                product.getName(),
-                product.getModel(),
-                product.getSerialNumber(),
-                product.getDescription(),
-                product.getQuantity(),
-                product.getPrice(),
-                product.getWarranty_status(),
-                product.getDistributor(),
-                product.getImage_url(),
-                reviewResponses
-        ));
+        return ResponseEntity.ok(new ProductDetailsResponse(product, reviewResponses));
     }
 
     @GetMapping("/by-category/{categoryId}")
-    public Page<Product> getProductsByCategory(
+    public ResponseEntity<Page<ProductPublishedResponse>> getProductsByCategory(
             @PathVariable("categoryId") Integer categoryId,
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        return productService.getProductsByCategory(categoryId, pageable);
+        Page<Product> products = productService.getProductsByCategory(categoryId, pageable);
+        Page<ProductPublishedResponse> dtoPage = products
+                .map(ProductPublishedResponse::new);
+
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/{id}/recommended")
-    public ResponseEntity<Page<Product>> getRecommendedProducts(
+    public ResponseEntity<Page<ProductPublishedResponse>> getRecommendedProducts(
             @PathVariable("id") String productId,
             @PageableDefault(page = 0, size = 5) Pageable pageable) {
 
@@ -104,7 +106,10 @@ public class ProductController {
         }
 
         Page<Product> recommendedProducts = productService.getRecommendedProducts(product.getCategory().getCategoryId(), productId, pageable);
-        return ResponseEntity.ok(recommendedProducts);
+        Page<ProductPublishedResponse> dtoPage = recommendedProducts
+                .map(ProductPublishedResponse::new);
+
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/{id}/name")
