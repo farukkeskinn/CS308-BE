@@ -1,6 +1,7 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
 import edu.sabanciuniv.projectbackend.dto.ProductDetailsResponse;
+import edu.sabanciuniv.projectbackend.dto.ProductPublishedResponse;
 import edu.sabanciuniv.projectbackend.dto.ReviewResponse;
 import edu.sabanciuniv.projectbackend.models.Product;
 import edu.sabanciuniv.projectbackend.repositories.ProductRepository;
@@ -116,7 +117,13 @@ public class ProductController {
     }
 
     @GetMapping("/published")
-    public List<Product> getPublishedProducts() {
-        return productRepository.findByPublishedTrueAndPriceGreaterThan(0.0);
+    public ResponseEntity<List<ProductPublishedResponse>> getPublishedProducts() {
+        List<Product> publishedProducts = productRepository.findByPublishedTrueAndPriceGreaterThan(0.0);
+
+        List<ProductPublishedResponse> response = publishedProducts.stream()
+                .map(ProductPublishedResponse::new)
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 }
