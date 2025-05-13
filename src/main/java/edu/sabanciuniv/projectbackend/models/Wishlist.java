@@ -1,5 +1,6 @@
 package edu.sabanciuniv.projectbackend.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -23,7 +24,8 @@ public class Wishlist {
     private Customer customer;
 
     // One wishlist can have many wishlist items
-    @OneToMany(mappedBy = "wishlist", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("wishlist")
+    @OneToMany(mappedBy = "wishlist", cascade = CascadeType.ALL, orphanRemoval=true)
     private List<WishlistItem> wishlistItems = new ArrayList<>();
 
     // Constructors, Getters, Setters
@@ -41,6 +43,26 @@ public class Wishlist {
 
     public List<WishlistItem> getWishlistItems() {
         return wishlistItems;
+    }
+
+    public void setWishlistId(String wishlistId) {
+        this.wishlistId = wishlistId;
+    }
+
+    public void setWishlistStatus(String wishlistStatus) {
+        this.wishlistStatus = wishlistStatus;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
+    public void setWishlistItems(List<WishlistItem> wishlistItems) {
+        this.wishlistItems = wishlistItems;
+    }
+
+    public void setWishlistItems(WishlistItem wishlistItem) {
+        this.wishlistItems.add(wishlistItem);
     }
 }
 

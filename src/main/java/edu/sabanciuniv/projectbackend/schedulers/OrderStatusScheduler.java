@@ -30,7 +30,7 @@ public class OrderStatusScheduler {
      * Her 30 saniyede bir:
      *   PROCESSING → IN_TRANSIT → DELIVERED
      */
-    @Scheduled(fixedRate = 60_000)
+    //@Scheduled(fixedRate = 30_000)
     public void advanceStatuses() {
         logger.info("▶︎ Scheduler çalıştı, sipariş durumları güncelleniyor...");
         List<Order> orders = orderRepository.findAll();

@@ -93,14 +93,14 @@ public class InvoiceGeneratorService {
             infoTable.addCell(getNoBorderCell(order.getOrderDate().toLocalDate().toString(), infoValueFont));
 
             infoTable.addCell(getNoBorderCell("Customer:", infoLabelFont));
-            infoTable.addCell(getNoBorderCell(order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName(), infoValueFont));
+            infoTable.addCell(getNoBorderCell(order.getCustomer().getFirstName() + order.getCustomer().getLastName(), infoValueFont));
 
             infoTable.addCell(getNoBorderCell("Email:", infoLabelFont));
             infoTable.addCell(getNoBorderCell(order.getCustomer().getEmail(), infoValueFont));
 
             infoTable.addCell(getNoBorderCell("Address:", infoLabelFont));
             infoTable.addCell(getNoBorderCell(
-                    request.getAddress() + ", " + request.getCity() + ", " + request.getCountry() + " " + request.getZipCode() + ", ",
+                    request.getAddress() + ", " + request.getCity() + ", " + request.getCountry() + ", " + request.getZipCode(),
                     infoValueFont));
 
             infoTable.addCell(getNoBorderCell("Phone:", infoLabelFont));
