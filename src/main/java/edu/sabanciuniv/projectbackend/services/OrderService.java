@@ -1,9 +1,12 @@
 package edu.sabanciuniv.projectbackend.services;
 
+import edu.sabanciuniv.projectbackend.dto.OrderItemDTO;
+import edu.sabanciuniv.projectbackend.dto.OrderSummaryDTO;
 import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.models.OrderItem;
 import edu.sabanciuniv.projectbackend.models.ShoppingCart;
 import edu.sabanciuniv.projectbackend.repositories.OrderRepository;
+import edu.sabanciuniv.projectbackend.utils.EncryptionUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,9 +19,10 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-
-    public OrderService(OrderRepository orderRepository) {
+    private final EncryptionUtil encryptionUtil;
+    public OrderService(OrderRepository orderRepository, EncryptionUtil encryptionUtil) {
         this.orderRepository = orderRepository;
+        this.encryptionUtil = encryptionUtil;
     }
 
     /** Tüm siparişler */
@@ -101,5 +105,39 @@ public class OrderService {
         Order o = opt.get();
         o.setOrderStatus(status);
         return orderRepository.save(o);
+    }
+
+    public OrderSummaryDTO toSummaryDto(Order o) {
+        return new OrderSummaryDTO(
+                o.getOrderId(),
+                o.getTotalPrice(),
+                o.getOrderDate(),
+                o.getOrderStatus(),
+                o.getPaymentStatus(),
+                o.getOrderItems().stream()
+                        .map(oi -> new OrderItemDTO(
+                                oi.getProduct().getProductId(),
+                                oi.getProduct().getName(),
+                                oi.getPriceAtPurchase(),
+                                oi.getQuantity()))
+                        .collect(Collectors.toList()),
+                safeInvoiceLink(o.getInvoiceLink())
+        );
+    }
+
+    private String safeInvoiceLink(String raw) {
+        if (raw == null) return null;
+        try {
+            // V2 – AES‑GCM
+            return encryptionUtil.decryptString(raw);
+        } catch (Exception v2ex) {
+            try {
+                // V1 – eski ECB
+                return EncryptionUtil.decryptLegacy(raw);
+            } catch (Exception v1ex) {
+                // Çözülemedi → ham hâliyle döndür (çok istisnai)
+                return raw;
+            }
+        }
     }
 }

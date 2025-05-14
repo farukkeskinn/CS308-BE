@@ -6,7 +6,9 @@ import com.itextpdf.text.pdf.*;
 import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.dto.PaymentRequest;
 import edu.sabanciuniv.projectbackend.models.OrderItem;
+import edu.sabanciuniv.projectbackend.repositories.OrderRepository;
 import org.springframework.stereotype.Service;
+import edu.sabanciuniv.projectbackend.utils.EncryptionUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -14,6 +16,15 @@ import java.io.IOException;
 
 @Service
 public class InvoiceGeneratorService {
+
+    private final EncryptionUtil encryptionUtil;
+    private final OrderRepository orderRepository;
+
+    public InvoiceGeneratorService(EncryptionUtil encryptionUtil,
+                                   OrderRepository orderRepository) {
+        this.encryptionUtil = encryptionUtil;
+        this.orderRepository = orderRepository;
+    }
 
     public String generateInvoicePdf(Order order, PaymentRequest request) {
         String fileName = "invoice_" + order.getOrderId() + ".pdf";
@@ -93,7 +104,7 @@ public class InvoiceGeneratorService {
             infoTable.addCell(getNoBorderCell(order.getOrderDate().toLocalDate().toString(), infoValueFont));
 
             infoTable.addCell(getNoBorderCell("Customer:", infoLabelFont));
-            infoTable.addCell(getNoBorderCell(order.getCustomer().getFirstName() + order.getCustomer().getLastName(), infoValueFont));
+            infoTable.addCell(getNoBorderCell(order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName(), infoValueFont));
 
             infoTable.addCell(getNoBorderCell("Email:", infoLabelFont));
             infoTable.addCell(getNoBorderCell(order.getCustomer().getEmail(), infoValueFont));
@@ -150,7 +161,11 @@ public class InvoiceGeneratorService {
             e.printStackTrace();
         }
 
-        return publicPdfUrl;
+
+        String encryptedUrl = encryptionUtil.encryptString(publicPdfUrl);
+        order.setInvoiceLink(encryptedUrl);
+        orderRepository.save(order);
+        return encryptedUrl;
     }
 
     private PdfPCell getNoBorderCell(String text, Font font) {

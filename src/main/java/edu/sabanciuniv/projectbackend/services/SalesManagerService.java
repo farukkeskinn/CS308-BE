@@ -4,6 +4,7 @@ import edu.sabanciuniv.projectbackend.models.*;
 import edu.sabanciuniv.projectbackend.repositories.ProductRepository;
 import edu.sabanciuniv.projectbackend.repositories.RefundRepository;
 import edu.sabanciuniv.projectbackend.repositories.SalesManagerRepository;
+import edu.sabanciuniv.projectbackend.repositories.WishlistItemRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -16,13 +17,19 @@ public class SalesManagerService {
     private final SalesManagerRepository salesManagerRepository;
     private final ProductRepository productRepository;
     private final RefundRepository refundRepository;
+    private final WishlistItemRepository wishlistItemRepository;
+    private final EmailService emailService;
 
     public SalesManagerService(SalesManagerRepository salesManagerRepository,
                                ProductRepository productRepository,
-                               RefundRepository refundRepository) {
+                               RefundRepository refundRepository,
+                               WishlistItemRepository wishlistItemRepository,
+                               EmailService emailService) {
         this.salesManagerRepository = salesManagerRepository;
         this.productRepository = productRepository;
         this.refundRepository = refundRepository;
+        this.wishlistItemRepository = wishlistItemRepository;
+        this.emailService = emailService;
     }
 
     public List<SalesManager> getAllSalesManagers() {
@@ -104,6 +111,10 @@ public class SalesManagerService {
 
         Product savedProduct = productRepository.save(product);
 
+        List<Customer> customers = wishlistItemRepository.findCustomersByProduct(productId);
+
+        customers.forEach(c -> emailService.sendDiscountMail(c.getEmail(), product));
+
         Map<String, Object> result = new HashMap<>();
         result.put("productId", productId);
         result.put("name", product.getName());
@@ -112,6 +123,7 @@ public class SalesManagerService {
         result.put("discountAmount", discountAmount);
         result.put("discountedPrice", discountedPrice);
         result.put("isDiscounted", true);
+        result.put("notifiedCount", customers.size());
 
         return result;
     }
