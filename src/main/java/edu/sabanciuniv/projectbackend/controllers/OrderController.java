@@ -58,7 +58,32 @@ public class OrderController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable("id") String orderId) {
+        try {
+            boolean cancelled = orderService.cancelOrder(orderId);
+            if (cancelled) {
+                return ResponseEntity.ok().body("Sipariş başarıyla iptal edildi.");
+            } else {
+                return ResponseEntity.badRequest().body("Sipariş iptal edilemedi. Sadece 'PROCESSING' durumundaki siparişler iptal edilebilir.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
-
-
+    @PostMapping("/{id}/cancel-item/{itemId}")
+    public ResponseEntity<?> cancelOrderItem(@PathVariable("id") String orderId,
+                                             @PathVariable("itemId") String orderItemId) {
+        try {
+            boolean cancelled = orderService.cancelOrderItem(orderId, orderItemId);
+            if (cancelled) {
+                return ResponseEntity.ok().body("Sipariş kalemi başarıyla iptal edildi.");
+            } else {
+                return ResponseEntity.badRequest().body("Sipariş kalemi iptal edilemedi. Sadece 'PROCESSING' durumundaki siparişlerde iptal işlemi yapılabilir.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

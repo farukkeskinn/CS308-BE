@@ -130,6 +130,18 @@ public class Product {
     public Double getDiscountedPrice() { return this.discountedPrice; }
 
     public void setDiscountedPrice() { this.discountedPrice = discountedPrice; }
+  
+    public Boolean getDiscounted() {
+        return discounted;
+    }
+
+    public Integer getDiscountPercentage() {
+        return discountPercentage;
+    }
+
+    public Double getDiscountedPrice() {
+        return discountedPrice;
+    }
 
     public void setStock(Integer stock) {
         this.quantity = stock;
