@@ -4,6 +4,7 @@ import edu.sabanciuniv.projectbackend.dto.OrderItemDTO;
 import edu.sabanciuniv.projectbackend.dto.OrderSummaryDTO;
 import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.services.OrderService;
+import edu.sabanciuniv.projectbackend.utils.EncryptionUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,9 +17,11 @@ import java.util.stream.Collectors;
 public class OrderController {
 
     private final OrderService orderService;
+    private final EncryptionUtil encryptionUtil;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, EncryptionUtil encryptionUtil) {
         this.orderService = orderService;
+        this.encryptionUtil = encryptionUtil;
     }
 
     @GetMapping
@@ -27,26 +30,11 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderSummaryDTO> getOrderById(@PathVariable("id") String orderId) {
-        Order order = orderService.getOrderById(orderId);
-        if (order == null) return ResponseEntity.notFound().build();
-
-        OrderSummaryDTO dto = new OrderSummaryDTO(
-                order.getOrderId(),
-                order.getTotalPrice(),
-                order.getOrderDate(),
-                order.getOrderStatus(),
-                order.getPaymentStatus(),
-                order.getOrderItems().stream().map(item -> new OrderItemDTO(
-                        item.getProduct().getProductId(),
-                        item.getProduct().getName(),
-                        item.getPriceAtPurchase(),
-                        item.getQuantity()
-                )).collect(Collectors.toList()),
-                order.getInvoiceLink()
-        );
-
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<OrderSummaryDTO> getOrderById(@PathVariable String id) {
+        Order o = orderService.getOrderById(id);
+        return (o == null)
+                ? ResponseEntity.notFound().build()
+                : ResponseEntity.ok(orderService.toSummaryDto(o));   // ✔
     }
 
     @PostMapping
@@ -61,23 +49,12 @@ public class OrderController {
 
     @GetMapping("/by-customer/{customerId}")
     public ResponseEntity<List<OrderSummaryDTO>> getByCustomer(@PathVariable String customerId) {
-        List<Order> orders = orderService.getOrdersByCustomer(customerId);
-        List<OrderSummaryDTO> result = orders.stream()
-                .map(order -> new OrderSummaryDTO(
-                        order.getOrderId(),
-                        order.getTotalPrice(),
-                        order.getOrderDate(),
-                        order.getOrderStatus(),
-                        order.getPaymentStatus(),
-                        order.getOrderItems().stream().map(item -> new OrderItemDTO(
-                                item.getProduct().getProductId(),
-                                item.getProduct().getName(),
-                                item.getPriceAtPurchase(),
-                                item.getQuantity()
-                        )).collect(Collectors.toList()),
-                        order.getInvoiceLink()
-                ))
+
+        List<OrderSummaryDTO> result = orderService.getOrdersByCustomer(customerId)
+                .stream()
+                .map(orderService::toSummaryDto)      // ✔ tek satırda dönüşüm
                 .collect(Collectors.toList());
+
         return ResponseEntity.ok(result);
     }
 

@@ -1,5 +1,6 @@
 package edu.sabanciuniv.projectbackend.services;
 
+import edu.sabanciuniv.projectbackend.dto.OrderSummaryDTO;
 import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.models.Payment;
 import edu.sabanciuniv.projectbackend.models.Address;
@@ -27,7 +28,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final ShoppingCartService shoppingCartService;
     private final ProductRepository productRepository;
-
+    private final EncryptionUtil encryptionUtil;
 
     private final AddressService addressService;
 
@@ -35,7 +36,8 @@ public class PaymentService {
                           ShoppingCartService cartService,
                           OrderService orderService,
                           EmailService emailService,
-                          InvoiceGeneratorService invoiceGeneratorService, ShoppingCartService shoppingCartService, ProductRepository productRepository, AddressService addressService) {
+                          InvoiceGeneratorService invoiceGeneratorService, ShoppingCartService shoppingCartService, ProductRepository productRepository, AddressService addressService,
+                          EncryptionUtil encryptionUtil) {
         this.paymentRepository = paymentRepository;
         this.cartService = cartService;
         this.orderService = orderService;
@@ -44,6 +46,7 @@ public class PaymentService {
         this.shoppingCartService = shoppingCartService;
         this.productRepository = productRepository;
         this.addressService = addressService;
+        this.encryptionUtil = encryptionUtil;
     }
 
     public List<Payment> getAllPayments() {
@@ -107,7 +110,7 @@ public class PaymentService {
                 ", Name: " + request.getCardHolderName() +
                 ", Exp: " + request.getExpiryDate() +
                 ", CVV: " + request.getCvv();
-        String encryptedInfo = EncryptionUtil.encrypt(rawInfo);
+        String encryptedInfo = encryptionUtil.encryptString(rawInfo);
 
         // 💾 6️⃣ Payment nesnesi oluştur ve kaydet
         Payment payment = new Payment();
@@ -121,8 +124,14 @@ public class PaymentService {
 
         // 📄 7️⃣ Fatura PDF oluştur
         String pdfPath = invoiceGeneratorService.generateInvoicePdf(order, request);
-
-        order.setInvoiceLink(pdfPath);
+        String encUrl;
+        if (pdfPath.startsWith("http")){
+            encUrl = encryptionUtil.encryptString(pdfPath);
+            order.setInvoiceLink(encUrl);
+        }
+        else{
+            order.setInvoiceLink(pdfPath);
+        }
         orderService.saveOrder(order);
 
         // 📧 8️⃣ E-posta gönder
@@ -162,7 +171,7 @@ public class PaymentService {
         response.setProductNames(
                 items.stream().map(item -> item.getProduct().getName()).toList()
         );
-        response.setInvoicePdfUrl(pdfPath);
+        response.setInvoicePdfUrl(encryptionUtil.decryptString(pdfPath));
 
         return response;
     }

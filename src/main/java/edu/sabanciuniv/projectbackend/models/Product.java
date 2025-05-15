@@ -127,6 +127,10 @@ public class Product {
         return this.quantity;
     }
 
+    public Double getDiscountedPrice() { return this.discountedPrice; }
+
+    public void setDiscountedPrice() { this.discountedPrice = discountedPrice; }
+  
     public Boolean getDiscounted() {
         return discounted;
     }
