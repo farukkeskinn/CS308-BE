@@ -139,10 +139,6 @@ public class Product {
         return discountPercentage;
     }
 
-    public Double getDiscountedPrice() {
-        return discountedPrice;
-    }
-
     public void setStock(Integer stock) {
         this.quantity = stock;
     }
