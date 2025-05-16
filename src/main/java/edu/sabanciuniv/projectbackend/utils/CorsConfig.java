@@ -13,11 +13,11 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // Allow all API endpoints
-                        .allowedOrigins("http://localhost:3000") // Allow React frontend
-                        .allowedMethods("GET", "POST", "PUT", "DELETE") // Allowed HTTP methods
-                        .allowedHeaders("*") // Allow all headers
-                        .allowCredentials(true);
+                registry.addMapping("/**")
+                        .allowedOrigins("http://localhost:3000", "http://10.51.26.245:3000", "http://172.20.10.7:3000") // ✅ yalnızca izinli IP'ler
+                        .allowedMethods("*")
+                        .allowedHeaders("*")
+                        .allowCredentials(true); // ✅ tarayıcıda oturum vb. için
             }
         };
     }
