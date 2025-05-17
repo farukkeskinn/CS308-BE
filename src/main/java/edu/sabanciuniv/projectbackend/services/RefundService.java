@@ -8,7 +8,7 @@ import edu.sabanciuniv.projectbackend.models.Refund;
 import edu.sabanciuniv.projectbackend.repositories.RefundRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,6 +27,9 @@ public class RefundService {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private EmailService emailService;
+
     // Simülasyon için zamanı tutan değişkenler
     private static LocalDateTime simulationStartTime = LocalDateTime.now();
     private static final double SIMULATION_SPEED = 0.5; // Her saniye 2 gün (1 saniye = 1/0.5 = 2 gün)
@@ -43,10 +46,12 @@ public class RefundService {
         return refundRepository.findById(refundId).orElse(null);
     }
 
+    @Transactional
     public Refund saveRefund(Refund refund) {
         return refundRepository.save(refund);
     }
 
+    @Transactional
     public void deleteRefund(String refundId) {
         refundRepository.deleteById(refundId);
     }
@@ -67,14 +72,21 @@ public class RefundService {
         Order order = orderService.getOrderById(orderId);
         if (order == null) return false;
 
-        // Sipariş DELIVERED durumunda mı ve iade edilebilir mi?
-        if (!"DELIVERED".equals(order.getOrderStatus()) || !order.getRefundable())
+        // Sipariş DELIVERED durumunda mı?
+        if (!"DELIVERED".equals(order.getOrderStatus()))
             return false;
 
         // Sipariş öğesi var mı?
         boolean orderItemExists = order.getOrderItems().stream()
                 .anyMatch(item -> item.getOrderItemId().equals(orderItemId));
         if (!orderItemExists) return false;
+
+        // 30 günlük süre kontrolü
+        LocalDateTime orderDate = order.getOrderDate();
+        LocalDateTime thirtyDaysAfterOrder = orderDate.plusDays(30);
+        if (LocalDateTime.now().isAfter(thirtyDaysAfterOrder)) {
+            return false;
+        }
 
         return true;
     }
@@ -86,12 +98,19 @@ public class RefundService {
         Order order = orderService.getOrderById(orderId);
         if (order == null) return false;
 
-        // Sipariş DELIVERED durumunda mı ve iade edilebilir mi?
-        if (!"DELIVERED".equals(order.getOrderStatus()) || !order.getRefundable())
+        // Sipariş DELIVERED durumunda mı?
+        if (!"DELIVERED".equals(order.getOrderStatus()))
             return false;
 
         // Siparişte iade edilebilecek ürün var mı?
         if (order.getOrderItems().isEmpty()) return false;
+
+        // 30 günlük süre kontrolü
+        LocalDateTime orderDate = order.getOrderDate();
+        LocalDateTime thirtyDaysAfterOrder = orderDate.plusDays(30);
+        if (LocalDateTime.now().isAfter(thirtyDaysAfterOrder)) {
+            return false;
+        }
 
         return true;
     }
@@ -99,6 +118,7 @@ public class RefundService {
     /**
      * Müşteri iadesi işlemi - tek ürün için
      */
+    @Transactional
     public Refund requestRefund(RefundRequest request) {
         // Siparişi bul
         Order order = orderService.getOrderById(request.getOrderId());
@@ -111,8 +131,10 @@ public class RefundService {
             throw new IllegalArgumentException("Sadece teslim edilmiş siparişler iade edilebilir");
         }
 
-        // İade edilebilirlik kontrolü
-        if (!order.getRefundable()) {
+        // 30 günlük süre kontrolü
+        LocalDateTime orderDate = order.getOrderDate();
+        LocalDateTime thirtyDaysAfterOrder = orderDate.plusDays(30);
+        if (LocalDateTime.now().isAfter(thirtyDaysAfterOrder)) {
             throw new IllegalArgumentException("İade süresi dolmuştur. Siparişler 30 gün içinde iade edilebilir");
         }
 
@@ -127,12 +149,19 @@ public class RefundService {
 
         OrderItem orderItem = orderItemOpt.get();
 
+        // Refund tablosunda bu orderItem için zaten bir istek var mı?
+        boolean alreadyRefunded = refundRepository.findAll().stream()
+                .anyMatch(r -> r.getOrderItem().getOrderItemId().equals(orderItem.getOrderItemId()));
+        if (alreadyRefunded) {
+            throw new IllegalArgumentException("Bu ürün için zaten bir iade talebi mevcut.");
+        }
+
         // Yeni iade kaydı oluştur
         Refund refund = new Refund();
         refund.setRefundId(UUID.randomUUID().toString());
         refund.setOrder(order);
         refund.setOrderItem(orderItem);
-        refund.setRequestDate(getSimulatedTime());
+        refund.setRequestDate(LocalDateTime.now());
         refund.setRefundStatus("PENDING");
         refund.setRefundAmount(orderItem.getPriceAtPurchase() * orderItem.getQuantity());
         refund.setReason(request.getReason());
@@ -163,6 +192,7 @@ public class RefundService {
     /**
      * Tüm siparişi iade etme işlemi
      */
+    @Transactional
     public List<Refund> requestRefundForEntireOrder(String orderId, String reason) {
         // Siparişi bul
         Order order = orderService.getOrderById(orderId);
@@ -175,8 +205,10 @@ public class RefundService {
             throw new IllegalArgumentException("Sadece teslim edilmiş siparişler iade edilebilir");
         }
 
-        // İade edilebilirlik kontrolü
-        if (!order.getRefundable()) {
+        // 30 günlük süre kontrolü
+        LocalDateTime orderDate = order.getOrderDate();
+        LocalDateTime thirtyDaysAfterOrder = orderDate.plusDays(30);
+        if (LocalDateTime.now().isAfter(thirtyDaysAfterOrder)) {
             throw new IllegalArgumentException("İade süresi dolmuştur. Siparişler 30 gün içinde iade edilebilir");
         }
 
@@ -186,7 +218,7 @@ public class RefundService {
         }
 
         List<Refund> refunds = new ArrayList<>();
-        LocalDateTime now = getSimulatedTime();
+        LocalDateTime now = LocalDateTime.now();
 
         // Siparişin tüm ürünleri için iade oluştur
         for (OrderItem orderItem : new ArrayList<>(order.getOrderItems())) {
@@ -222,15 +254,23 @@ public class RefundService {
     /**
      * İade işlemini tamamla (Admin veya otomatik işlem için)
      */
+    @Transactional
     public Refund processRefund(String refundId, String status) {
         Refund refund = getRefundById(refundId);
         if (refund == null) {
-            throw new IllegalArgumentException("İade bulunamadı");
+            throw new IllegalArgumentException("İade kaydı bulunamadı");
         }
 
         refund.setRefundStatus(status);
-        refund.setProcessDate(getSimulatedTime());
+        refund.setProcessDate(LocalDateTime.now());
+        
+        Refund savedRefund = saveRefund(refund);
 
-        return saveRefund(refund);
+        // İade işlemi onaylandığında e-posta gönder
+        if ("APPROVED".equals(status)) {
+            emailService.sendRefundConfirmationEmail(savedRefund);
+        }
+
+        return savedRefund;
     }
 }

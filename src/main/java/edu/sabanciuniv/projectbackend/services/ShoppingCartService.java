@@ -1,5 +1,5 @@
 package edu.sabanciuniv.projectbackend.services;
-
+import org.springframework.transaction.annotation.Transactional;
 import edu.sabanciuniv.projectbackend.models.ShoppingCart;
 import edu.sabanciuniv.projectbackend.models.ShoppingCartItem;
 import edu.sabanciuniv.projectbackend.repositories.ShoppingCartItemRepository;
@@ -27,10 +27,12 @@ public class ShoppingCartService {
         return shoppingCartRepository.findById(cartId).orElse(null);
     }
 
+    @Transactional
     public ShoppingCart saveShoppingCart(ShoppingCart cart) {
         return shoppingCartRepository.save(cart);
     }
 
+    @Transactional
     public void deleteShoppingCart(String cartId) {
         shoppingCartRepository.deleteById(cartId);
     }
@@ -39,6 +41,7 @@ public class ShoppingCartService {
         return shoppingCartRepository.findByCustomerEmail(username);
     }
 
+    @Transactional
     public void clearCart(String username) {
         ShoppingCart cart = shoppingCartRepository.findByCustomerEmail(username);
         if (cart != null && !cart.getShoppingCartItems().isEmpty()) {

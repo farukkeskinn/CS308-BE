@@ -1,4 +1,5 @@
 package edu.sabanciuniv.projectbackend.services;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.sabanciuniv.projectbackend.models.Admin;
 import edu.sabanciuniv.projectbackend.repositories.AdminRepository;
@@ -22,10 +23,12 @@ public class AdminService {
         return adminRepository.findById(adminId).orElse(null);
     }
 
+    @Transactional
     public Admin saveAdmin(Admin admin) {
         return adminRepository.save(admin);
     }
 
+    @Transactional
     public void deleteAdmin(String adminId) {
         adminRepository.deleteById(adminId);
     }

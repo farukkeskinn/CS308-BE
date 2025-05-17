@@ -1,5 +1,5 @@
 package edu.sabanciuniv.projectbackend.services;
-
+import org.springframework.transaction.annotation.Transactional;
 import edu.sabanciuniv.projectbackend.models.*;
 import edu.sabanciuniv.projectbackend.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +28,7 @@ public class AuthService {
     @Autowired
     private ShoppingCartRepository shoppingCartRepository;
 
+    @Transactional
     public String register(String firstName, String lastName, String email, String password) {
         if (customerRepo.findByEmail(email) == null) {
             String encryptedPassword = passwordEncoder.encode(password);

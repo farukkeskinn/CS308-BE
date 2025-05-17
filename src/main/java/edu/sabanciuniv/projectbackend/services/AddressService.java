@@ -1,5 +1,5 @@
 package edu.sabanciuniv.projectbackend.services;
-
+import org.springframework.transaction.annotation.Transactional;
 import edu.sabanciuniv.projectbackend.models.Address;
 import edu.sabanciuniv.projectbackend.repositories.AddressRepository;
 import org.springframework.stereotype.Service;
@@ -22,10 +22,12 @@ public class AddressService {
         return addressRepository.findById(addressId).orElse(null);
     }
 
+    @Transactional
     public Address saveAddress(Address address) {
         return addressRepository.save(address);
     }
 
+    @Transactional
     public void deleteAddress(String addressId) {
         addressRepository.deleteById(addressId);
     }

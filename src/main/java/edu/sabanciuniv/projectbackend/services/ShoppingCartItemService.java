@@ -3,7 +3,7 @@ package edu.sabanciuniv.projectbackend.services;
 import edu.sabanciuniv.projectbackend.models.ShoppingCartItem;
 import edu.sabanciuniv.projectbackend.repositories.ShoppingCartItemRepository;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
@@ -23,10 +23,12 @@ public class ShoppingCartItemService {
         return shoppingCartItemRepository.findById(itemId).orElse(null);
     }
 
+    @Transactional
     public ShoppingCartItem saveShoppingCartItem(ShoppingCartItem item) {
         return shoppingCartItemRepository.save(item);
     }
 
+    @Transactional
     public void deleteShoppingCartItem(String itemId) {
         shoppingCartItemRepository.deleteById(itemId);
     }

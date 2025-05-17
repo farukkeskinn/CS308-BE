@@ -10,6 +10,26 @@ import java.util.List;
 @Table(name = "orders")
 public class Order {
 
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (version == null) {
+            version = 0L;
+        }
+    }
+
+    public Long getVersion() {
+        return version != null ? version : 0L;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version != null ? version : 0L;
+    }
+
     @Id
     @Column(name = "order_id", columnDefinition = "CHAR(36)")
     private String orderId;
@@ -28,9 +48,6 @@ public class Order {
 
     @Column(name = "invoice_link")
     private String invoiceLink;
-
-    @Column(name = "refundable", nullable = false)
-    private Boolean refundable = true; // Varsayılan olarak true
 
     @ManyToOne
     private SalesManager salesManager;
@@ -82,10 +99,6 @@ public class Order {
         return orderItems;
     }
 
-    public Boolean getRefundable() {
-        return refundable;
-    }
-
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
@@ -118,13 +131,16 @@ public class Order {
         this.invoiceLink = invoiceLink;
     }
 
-    public void setRefundable(Boolean refundable) {
-        this.refundable = refundable;
-    }
     public Address getShippingAddress() {
         return shippingAddress;
     }
+
     public void setShippingAddress(Address shippingAddress) {
         this.shippingAddress = shippingAddress;
+    }
+
+    // Constructor'da version'ı başlat
+    public Order() {
+        this.version = 0L;
     }
 }

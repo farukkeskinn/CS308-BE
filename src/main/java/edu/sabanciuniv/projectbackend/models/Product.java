@@ -12,6 +12,26 @@ import java.util.List;
 @Table(name = "products")
 public class Product {
 
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (version == null) {
+            version = 0L;
+        }
+    }
+
+    public Long getVersion() {
+        return version != null ? version : 0L;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version != null ? version : 0L;
+    }
+
     @Id
     @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "product_id", columnDefinition = "CHAR(36)")
@@ -211,5 +231,6 @@ public class Product {
     public void setImage_url(String image_url) {
         this.image_url = image_url;
     }
+
 }
 

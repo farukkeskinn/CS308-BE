@@ -10,9 +10,11 @@ import org.springframework.data.repository.query.Param;
 @Repository
 public interface ShoppingCartRepository extends JpaRepository<ShoppingCart, String> {
 
-    @Query("SELECT sc FROM ShoppingCart sc WHERE sc.customer = :customer")
-    ShoppingCart findByCustomer(@Param("customer") Customer customer);
+    @Query("SELECT s FROM ShoppingCart s WHERE s.customer.customerId = :customerId")
+    ShoppingCart findByCustomerId(@Param("customerId") String customerId);
 
     ShoppingCart findByCustomerEmail(String email);
+    ShoppingCart findByCustomer(Customer customer);
+
 }
 

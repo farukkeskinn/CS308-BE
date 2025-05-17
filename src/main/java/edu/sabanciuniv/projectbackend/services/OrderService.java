@@ -10,6 +10,7 @@ import edu.sabanciuniv.projectbackend.repositories.OrderRepository;
 import edu.sabanciuniv.projectbackend.utils.EncryptionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,21 +48,24 @@ public class OrderService {
     }
 
     /** Yeni veya güncelleme */
+    @Transactional
     public Order saveOrder(Order order) {
         return orderRepository.save(order);
     }
 
     /** Silme */
+    @Transactional
     public void deleteOrder(String orderId) {
         orderRepository.deleteById(orderId);
     }
 
     /** Cart'tan Order oluşturma (checkout akışı) */
+    @Transactional
     public Order createOrderFromCart(ShoppingCart cart) {
         Order order = new Order();
         order.setOrderId(UUID.randomUUID().toString());
         order.setCustomer(cart.getCustomer());
-        // Başlangıç statüsünü "PROCESSING" yapıyoruz
+        order.setVersion(0L);  // Version'ı açıkça ayarla
         order.setOrderStatus("PROCESSING");
         order.setPaymentStatus("PENDING");
         order.setOrderDate(LocalDateTime.now());
@@ -78,6 +82,7 @@ public class OrderService {
             oi.setProduct(cartItem.getProduct());
             oi.setQuantity(cartItem.getQuantity());
             oi.setPriceAtPurchase(cartItem.getProduct().getPrice());
+            oi.setVersion(0L);  // OrderItem için de version ayarla
             return oi;
         }).collect(Collectors.toList());
         order.setOrderItems(orderItems);
@@ -89,6 +94,7 @@ public class OrderService {
      * Siparişi iptal etme. Sadece PROCESSING statüsündeyse geçerli.
      * @return true ise iptal edildi, false ise iptal edilemedi.
      */
+    @Transactional
     public boolean cancelOrder(String orderId) {
         Optional<Order> opt = orderRepository.findById(orderId);
         if (opt.isEmpty()) return false;
@@ -112,6 +118,7 @@ public class OrderService {
      * Tek bir sipariş öğesini iptal etme. Sadece PROCESSING statüsündeki siparişlerde geçerli.
      * @return true ise iptal edildi, false ise iptal edilemedi.
      */
+    @Transactional
     public boolean cancelOrderItem(String orderId, String orderItemId) {
         Optional<Order> opt = orderRepository.findById(orderId);
         if (opt.isEmpty()) return false;
@@ -155,6 +162,7 @@ public class OrderService {
      * Manuel statü güncelleme (admin / test amaçlı)
      * @return güncellenmiş Order veya null
      */
+    @Transactional
     public Order updateOrderStatus(String orderId, String status) {
         Optional<Order> opt = orderRepository.findById(orderId);
         if (opt.isEmpty()) return null;

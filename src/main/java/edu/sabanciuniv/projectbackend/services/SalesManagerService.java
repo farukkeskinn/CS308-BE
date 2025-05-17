@@ -6,7 +6,8 @@ import edu.sabanciuniv.projectbackend.repositories.RefundRepository;
 import edu.sabanciuniv.projectbackend.repositories.SalesManagerRepository;
 import edu.sabanciuniv.projectbackend.repositories.WishlistItemRepository;
 import org.springframework.stereotype.Service;
-
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -93,39 +94,35 @@ public class SalesManagerService {
         return result;
     }
 
+    @Transactional
     public Map<String, Object> applyProductDiscount(String productId, Integer discountPercentage) {
-        Optional<Product> productOpt = productRepository.findById(productId);
-        if (!productOpt.isPresent()) {
-            throw new RuntimeException("Product not found with ID: " + productId);
+        try {
+            Optional<Product> productOpt = productRepository.findById(productId);
+            if (productOpt.isEmpty()) {
+                throw new RuntimeException("Product not found with ID: " + productId);
+            }
+
+            Product product = productOpt.get();
+            Double originalPrice = product.getPrice();
+            Double discountAmount = originalPrice * (discountPercentage / 100.0);
+            Double discountedPrice = originalPrice - discountAmount;
+
+            product.setDiscounted(true);
+            product.setDiscountPercentage(discountPercentage);
+            product.setDiscountedPrice(discountedPrice);
+
+            productRepository.save(product);
+
+            List<Customer> customers = wishlistItemRepository.findCustomersByProduct(productId);
+            customers.forEach(c -> emailService.sendDiscountMail(c.getEmail(), product));
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("productId", productId);
+            result.put("discountedPrice", discountedPrice);
+            return result;
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new RuntimeException("Product was updated by another user. Please refresh and try again.");
         }
-
-        Product product = productOpt.get();
-
-        Double originalPrice = product.getPrice();
-        Double discountAmount = originalPrice * (discountPercentage / 100.0);
-        Double discountedPrice = originalPrice - discountAmount;
-
-        product.setDiscounted(true);
-        product.setDiscountPercentage(discountPercentage);
-        product.setDiscountedPrice(discountedPrice);
-
-        Product savedProduct = productRepository.save(product);
-
-        List<Customer> customers = wishlistItemRepository.findCustomersByProduct(productId);
-
-        customers.forEach(c -> emailService.sendDiscountMail(c.getEmail(), product));
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("productId", productId);
-        result.put("name", product.getName());
-        result.put("originalPrice", originalPrice);
-        result.put("discountPercentage", discountPercentage);
-        result.put("discountAmount", discountAmount);
-        result.put("discountedPrice", discountedPrice);
-        result.put("isDiscounted", true);
-        result.put("notifiedCount", customers.size());
-
-        return result;
     }
 
     public List<Refund> getPendingRefunds() {
@@ -136,6 +133,7 @@ public class SalesManagerService {
         return refundRepository.findAll();
     }
 
+    @Transactional
     public Refund processRefund(String refundId, String decision, String comment) {
         Refund refund = refundRepository.findById(refundId)
                 .orElseThrow(() -> new RuntimeException("Refund not found with ID: " + refundId));
@@ -144,6 +142,11 @@ public class SalesManagerService {
             throw new IllegalStateException("This refund has already been processed. Current status: " + refund.getRefundStatus());
         }
 
+        // İşlem tarihini her durumda set et
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println("Setting process date to: " + now);
+        refund.setProcessDate(now);
+
         if ("APPROVE".equals(decision)) {
             refund.setRefundStatus("APPROVED");
             OrderItem orderItem = refund.getOrderItem();
@@ -151,14 +154,53 @@ public class SalesManagerService {
             Integer currentStock = product.getStock();
             product.setStock(currentStock + orderItem.getQuantity());
             Order order = refund.getOrder();
-
+            
+            // Önce refund'ı kaydet
+            Refund savedRefund = refundRepository.save(refund);
+            
+            // processDate'in null olmadığından emin ol
+            if (savedRefund.getProcessDate() == null) {
+                savedRefund.setProcessDate(now);
+                savedRefund = refundRepository.save(savedRefund);
+            }
+            
+            System.out.println("Saved refund with process date: " + savedRefund.getProcessDate());
+            
+            // Sonra e-posta gönder
+            try {
+                System.out.println("=== Refund Email Debug Info ===");
+                System.out.println("Refund ID: " + savedRefund.getRefundId());
+                System.out.println("Process Date: " + savedRefund.getProcessDate());
+                System.out.println("Customer Email: " + savedRefund.getOrder().getCustomer().getEmail());
+                System.out.println("Customer Name: " + savedRefund.getOrder().getCustomer().getFirstName());
+                System.out.println("Order ID: " + savedRefund.getOrder().getOrderId());
+                System.out.println("Refund Amount: " + savedRefund.getRefundAmount());
+                System.out.println("Refund Reason: " + savedRefund.getReason());
+                System.out.println("============================");
+                
+                emailService.sendRefundConfirmationEmail(savedRefund);
+                System.out.println("Email sent successfully!");
+            } catch (Exception e) {
+                System.err.println("Failed to send refund confirmation email!");
+                System.err.println("Error: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
+            return savedRefund;
         } else if ("REJECT".equals(decision)) {
             refund.setRefundStatus("REJECTED");
+            Refund savedRefund = refundRepository.save(refund);
+            
+            // processDate'in null olmadığından emin ol
+            if (savedRefund.getProcessDate() == null) {
+                savedRefund.setProcessDate(now);
+                savedRefund = refundRepository.save(savedRefund);
+            }
+            
+            return savedRefund;
         } else {
             throw new IllegalArgumentException("Invalid decision. Must be either 'APPROVE' or 'REJECT'.");
         }
-
-        return refundRepository.save(refund);
     }
 
     public Map<String, Object> calculateProfitLossByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
@@ -198,38 +240,27 @@ public class SalesManagerService {
         return result;
     }
 
+    @Transactional
     public Map<String, Object> setProductPrice(String productId, Double price, Boolean publishProduct) {
-        Optional<Product> productOpt = productRepository.findById(productId);
-        if (!productOpt.isPresent()) {
-            throw new RuntimeException("Product not found with ID: " + productId);
+        try {
+            Optional<Product> productOpt = productRepository.findById(productId);
+            if (productOpt.isEmpty()) {
+                throw new RuntimeException("Product not found");
+            }
+
+            Product product = productOpt.get();
+            product.setPrice(price);
+            if (product.getCost() == null) product.setCost(price * 0.7);
+            if (publishProduct) product.setPublished(true);
+            productRepository.save(product);
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("productId", productId);
+            map.put("price", price);
+            return map;
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new RuntimeException("Product was concurrently updated. Try again.");
         }
-
-        Product product = productOpt.get();
-
-        // Set the price
-        product.setPrice(price);
-
-        // Calculate cost if it's not already set (optional, based on your business logic)
-        if (product.getCost() == null) {
-            // Example: Set cost as 70% of price by default
-            product.setCost(price * 0.7);
-        }
-
-        // Set the product as visible on the website if publishProduct is true
-        if (publishProduct) {
-            product.setPublished(true);
-        }
-
-        Product savedProduct = productRepository.save(product);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("productId", productId);
-        result.put("name", product.getName());
-        result.put("price", price);
-        result.put("cost", product.getCost());
-        result.put("published", product.getPublished());
-
-        return result;
     }
 
     public List<Product> getUnpublishedProducts() {

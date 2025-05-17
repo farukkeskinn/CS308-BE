@@ -8,6 +8,10 @@ import java.time.LocalDateTime;
 @Table(name = "refunds")
 public class Refund {
 
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
+
     @Id
     @Column(name = "refund_id", columnDefinition = "CHAR(36)")
     private String refundId;
@@ -58,4 +62,19 @@ public class Refund {
     public void setOrderItem(OrderItem orderItem)            { this.orderItem = orderItem; }
     public void setReason(String reason)                     { this.reason = reason; }
     public void setProcessDate(LocalDateTime processDate)    { this.processDate = processDate; }
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (version == null) {
+            version = 0L;
+        }
+    }
+
+    public Long getVersion() {
+        return version != null ? version : 0L;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version != null ? version : 0L;
+    }
 }

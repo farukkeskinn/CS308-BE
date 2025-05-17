@@ -28,6 +28,7 @@ public class CategoryService {
         return categoryRepository.findById(categoryId).orElse(null);
     }
 
+    @Transactional
     public Category saveCategory(Category category) {
         return categoryRepository.save(category);
     }

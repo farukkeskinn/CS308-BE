@@ -5,7 +5,7 @@ import edu.sabanciuniv.projectbackend.models.Delivery;
 import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.repositories.DeliveryRepository;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +24,7 @@ public class DeliveryService {
         this.addressService  = as;
     }
 
+    @Transactional
     public Delivery createForOrder(String orderId, String addressId) {
         // 1) fetch the order
         Order order = orderService.getOrderById(orderId);
@@ -50,6 +51,7 @@ public class DeliveryService {
     }
 
     /** once delivered, update that Delivery row too */
+    @Transactional
     public Delivery markDelivered(String deliveryId) {
         Delivery d = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new IllegalArgumentException("No such delivery"));
@@ -57,6 +59,7 @@ public class DeliveryService {
         return deliveryRepository.save(d);
     }
 
+    @Transactional
     public Delivery markDeliveredForOrder(String orderId) {
         Delivery d = deliveryRepository
                 .findByOrder_OrderId(orderId)
@@ -73,10 +76,12 @@ public class DeliveryService {
         return deliveryRepository.findById(deliveryId).orElse(null);
     }
 
+    @Transactional
     public Delivery saveDelivery(Delivery delivery) {
         return deliveryRepository.save(delivery);
     }
 
+    @Transactional
     public void deleteDelivery(String deliveryId) {
         deliveryRepository.deleteById(deliveryId);
     }

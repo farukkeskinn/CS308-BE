@@ -7,6 +7,23 @@ import java.util.List;
 @Table(name = "salesmanagers")
 public class SalesManager {
 
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (version == null) version = 0L;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+    public void setVersion(Long version) {
+        this.version = (version != null) ? version : 0L;
+    }
+
     @Id
     @Column(name = "sm_id", columnDefinition = "CHAR(36)")
     private String smId;

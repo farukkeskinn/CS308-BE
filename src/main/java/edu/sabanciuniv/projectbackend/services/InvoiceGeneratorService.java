@@ -28,7 +28,16 @@ public class InvoiceGeneratorService {
 
     public String generateInvoicePdf(Order order, PaymentRequest request) {
         String fileName = "invoice_" + order.getOrderId() + ".pdf";
-        String filePath = new File("build/resources/main/static/invoices", fileName).getAbsolutePath();
+        File outputFile = new File("build/resources/main/static/invoices", fileName);
+
+// 🔐 Dizin yoksa oluştur
+        File parentDir = outputFile.getParentFile();
+        if (!parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+
+        String filePath = outputFile.getAbsolutePath();
+
         String publicPdfUrl = "http://localhost:8080/invoices/" + fileName;
 
         Document document = new Document(PageSize.A4, 50, 50, 50, 50);

@@ -45,7 +45,8 @@ public class CartManagementService {
      *        - If item already exists -> increase quantity -> if stock is insufficient, return error
      *        - If new item -> check stock, if insufficient return error, otherwise add
      */
-    public ShoppingCart addItemToCart(AddItemRequest request) {
+    @Transactional
+    public synchronized ShoppingCart addItemToCart(AddItemRequest request) {
         // 1) GUEST flow
         if (request.getCustomerId() == null || request.getCustomerId().isBlank()) {
             ShoppingCart dummyCart = new ShoppingCart();
@@ -128,7 +129,8 @@ public class CartManagementService {
     /**
      * 2) Remove a single item (by itemId) from cart
      */
-    public void removeItemFromCart(String itemId) {
+    @Transactional
+    public synchronized void removeItemFromCart(String itemId) {
         // 1) Find item
         ShoppingCartItem item = cartItemRepository.findById(itemId).orElse(null);
         if (item == null) return;
@@ -159,7 +161,8 @@ public class CartManagementService {
     /**
      * 3) Completely clear a specific cart
      */
-    public void clearCart(String cartId) {
+    @Transactional
+    public synchronized void clearCart(String cartId) {
         ShoppingCart cart = cartRepository.findById(cartId).orElse(null);
         if (cart == null) {
             return;
@@ -193,7 +196,8 @@ public class CartManagementService {
      * 4) Merge guest items with the logged-in/registered user's cart
      *    - Stock is checked for each product. If insufficient -> return error.
      */
-    public ShoppingCart mergeGuestCart(MergeCartRequest request) {
+    @Transactional
+    public synchronized ShoppingCart mergeGuestCart(MergeCartRequest request) {
         // Find user
         var customer = customerService.getCustomerById(request.getCustomerId());
 
@@ -284,8 +288,8 @@ public class CartManagementService {
         return cartRepository.findByCustomer(customer);
     }
 
-
-    public void removePartialQuantity(String itemId, int quantityToRemove) {
+    @Transactional
+    public synchronized void removePartialQuantity(String itemId, int quantityToRemove) {
         ShoppingCartItem item = cartItemRepository.findById(itemId).orElse(null);
         if (item == null) {
             return;

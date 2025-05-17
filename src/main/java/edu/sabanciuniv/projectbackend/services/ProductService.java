@@ -7,7 +7,7 @@ import edu.sabanciuniv.projectbackend.repositories.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -30,6 +30,7 @@ public class ProductService {
         return productRepository.findById(productId).orElse(null);
     }
 
+    @Transactional
     public Product saveProduct(Product product) {
         if (product.getProductId() == null || product.getProductId().trim().isEmpty()) {
             product.setProductId(UUID.randomUUID().toString());
@@ -50,6 +51,7 @@ public class ProductService {
         return productRepository.findRecommendedProducts(categoryId, excludeProductId, pageable);
     }
 
+    @Transactional
     public Product updateProductStock(String productId, Integer newStock) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));

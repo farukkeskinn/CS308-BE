@@ -7,6 +7,7 @@ import edu.sabanciuniv.projectbackend.models.Address;
 import edu.sabanciuniv.projectbackend.repositories.PaymentRepository;
 import org.springframework.stereotype.Service;
 import edu.sabanciuniv.projectbackend.dto.InvoiceResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.sabanciuniv.projectbackend.repositories.ProductRepository;
 
@@ -57,16 +58,18 @@ public class PaymentService {
         return paymentRepository.findById(paymentId).orElse(null);
     }
 
+    @Transactional
     public Payment savePayment(Payment payment) {
         return paymentRepository.save(payment);
     }
 
+    @Transactional
     public void deletePayment(String paymentId) {
         paymentRepository.deleteById(paymentId);
     }
 
+    @Transactional
     public InvoiceResponse processCheckout(PaymentRequest request, String username) {
-
         // 1️⃣ Kullanıcının sepetini al
         ShoppingCart cart = cartService.getCartByUsername(username);
         List<ShoppingCartItem> items = cart.getShoppingCartItems();
@@ -80,30 +83,52 @@ public class PaymentService {
                 .mapToDouble(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
 
+        // 🔟 Önce adresi oluştur ve kaydet
+        Address address = new Address();
+        address.setAddressId(UUID.randomUUID().toString());
+        address.setVersion(0L);  // Version'ı ayarla
+
+        String addressLine = request.getAddress() + ", " +
+                request.getCity() + ", " +
+                request.getCountry() + ", " +
+                request.getZipCode();
+        String addressName = request.getAddressName();
+
+        address.setAddressLine(addressLine);
+        address.setAddressName(addressName);
+        address.setCustomer(cart.getCustomer()); // Müşteriyi ayarla
+
+        // Adresi kaydet
+        address = addressService.saveAddress(address);
+
         // 3️⃣ Siparişi oluştur
         Order order = orderService.createOrderFromCart(cart);
+        order.setPaymentStatus("DONE");
+        order.setVersion(0L);
+        order.setShippingAddress(address); // Kaydedilmiş adresi kullan
+
+        // Order kaydedilmeden fatura üretilirse ID null kalır
+        order = orderService.saveOrder(order);
 
         // 3.1️⃣ Ürün stoklarını güncelle
         for (ShoppingCartItem item : items) {
             var product = item.getProduct();
             int boughtQty = item.getQuantity();
 
-            product.setItemSold(product.getItemSold() + boughtQty);// satış sayısını artır
+            product.setItemSold(product.getItemSold() + boughtQty);
             product.setQuantity(product.getQuantity() - boughtQty);
 
-            // Optional: stok 0'ın altına düşmesin
             if (product.getQuantity() < 0) {
                 throw new RuntimeException("Product stock cannot go negative: " + product.getName());
             }
 
-            // ürünü güncelle
             productRepository.save(product);
         }
 
-        // 4️⃣ Mock ödeme onayı (pop-up frontend'de)
+        // 4️⃣ Mock ödeme onayı
         System.out.println("Mock payment approved for card: " + request.getCardNumber());
         order.setPaymentStatus("DONE");
-        orderService.saveOrder(order);
+        order = orderService.saveOrder(order);
 
         // 🔒 5️⃣ Şifreli kart bilgisi oluştur
         String rawInfo = "Card: " + request.getCardNumber() +
@@ -120,6 +145,7 @@ public class PaymentService {
         payment.setAmount(totalAmount);
         payment.setOrder(order);
         payment.setPaymentStatus("DONE");
+        payment.setVersion(0L);
         paymentRepository.save(payment);
 
         // 📄 7️⃣ Fatura PDF oluştur
@@ -137,32 +163,10 @@ public class PaymentService {
         // 📧 8️⃣ E-posta gönder
         emailService.sendInvoiceEmail(order.getCustomer().getEmail(), pdfPath);
 
+        // 9️⃣ Sepeti temizle
         shoppingCartService.clearCart(username);
 
-
-        // 🔟 Adresi adresses tablosuna ekle
-        Address address = new Address();
-        address.setAddressId(UUID.randomUUID().toString());
-
-        String addressLine = request.getAddress() + ", " +
-                request.getCity() + ", " +
-                request.getCountry() + ", " +
-                request.getZipCode();
-        String addressName = request.getAddressName();
-
-        address.setAddressLine(addressLine);
-        address.setAddressName(addressName);
-        address.setCustomer(order.getCustomer()); // veya order.getCustomer().getCustomerId() eğer UUID string
-
-        addressService.saveAddress(address);
-
-        // ─── STEP 3: LINK SHIPPING ADDRESS TO ORDER ───
-        // (adds order.address_id → your new Address)
-        order.setShippingAddress(address);
-        orderService.saveOrder(order);
-
-
-        // 9️⃣ Yanıtı hazırla
+        // 🔟 Yanıtı hazırla
         InvoiceResponse response = new InvoiceResponse();
         response.setOrderId(order.getOrderId());
         response.setCustomerName(order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName());
