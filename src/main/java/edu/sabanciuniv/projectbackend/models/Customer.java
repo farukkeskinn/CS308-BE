@@ -3,6 +3,9 @@ import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
+
+@Data
 @Entity
 @Table(name = "customers")
 public class Customer {

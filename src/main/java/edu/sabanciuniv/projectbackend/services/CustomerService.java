@@ -1,9 +1,12 @@
 package edu.sabanciuniv.projectbackend.services;
 
+import edu.sabanciuniv.projectbackend.dto.PasswordChangeRequest;
 import edu.sabanciuniv.projectbackend.models.Customer;
 import edu.sabanciuniv.projectbackend.models.ShoppingCart;
 import edu.sabanciuniv.projectbackend.repositories.CustomerRepository;
 import edu.sabanciuniv.projectbackend.repositories.ShoppingCartRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -12,14 +15,14 @@ import java.util.UUID;
 @Service
 public class CustomerService {
 
-    private final CustomerRepository customerRepository;
-    private final ShoppingCartRepository shoppingCartRepository;
+    @Autowired
+    private CustomerRepository customerRepository;
 
-    public CustomerService(CustomerRepository customerRepository,
-                           ShoppingCartRepository shoppingCartRepository) {
-        this.customerRepository = customerRepository;
-        this.shoppingCartRepository = shoppingCartRepository;
-    }
+    @Autowired
+    private ShoppingCartRepository shoppingCartRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
@@ -58,5 +61,21 @@ public class CustomerService {
             return customer.getCustomerId();
         }
         throw new RuntimeException("Customer not found with email: " + email);
+    }
+
+    @Transactional
+    public boolean changePassword(String customerId, PasswordChangeRequest request) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        // Verify current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), customer.getPassword())) {
+            return false;
+        }
+
+        // Update password
+        customer.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        customerRepository.save(customer);
+        return true;
     }
 }
