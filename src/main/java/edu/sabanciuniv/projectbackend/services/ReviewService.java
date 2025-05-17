@@ -61,9 +61,13 @@ public class ReviewService {
     public Review updateReviewStatus(String reviewId, String newStatus) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review not found: " + reviewId));
+
         review.setApprovalStatus(newStatus);
+
+        // Bu save çağrısı @Version varsa optimistic locking yapar
         return reviewRepository.save(review);
     }
+
 
     @Transactional
     public Review submitReview(String customerId,

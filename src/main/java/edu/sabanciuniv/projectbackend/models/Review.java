@@ -9,6 +9,24 @@ import java.time.LocalDateTime;
 @Table(name = "reviews")
 public class Review {
 
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (version == null) version = 0L;
+    }
+
+    public Long getVersion() {
+        return version != null ? version : 0L;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version != null ? version : 0L;
+    }
+
     @Id
     @Column(name = "review_id", length = 36)
     private String reviewId;

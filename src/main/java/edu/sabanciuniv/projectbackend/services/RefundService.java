@@ -8,7 +8,7 @@ import edu.sabanciuniv.projectbackend.models.Refund;
 import edu.sabanciuniv.projectbackend.repositories.RefundRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,10 +43,12 @@ public class RefundService {
         return refundRepository.findById(refundId).orElse(null);
     }
 
+    @Transactional
     public Refund saveRefund(Refund refund) {
         return refundRepository.save(refund);
     }
 
+    @Transactional
     public void deleteRefund(String refundId) {
         refundRepository.deleteById(refundId);
     }
@@ -99,6 +101,7 @@ public class RefundService {
     /**
      * Müşteri iadesi işlemi - tek ürün için
      */
+    @Transactional
     public Refund requestRefund(RefundRequest request) {
         // Siparişi bul
         Order order = orderService.getOrderById(request.getOrderId());
@@ -126,6 +129,14 @@ public class RefundService {
         }
 
         OrderItem orderItem = orderItemOpt.get();
+
+// ✅ Refund tablosunda bu orderItem için zaten bir istek var mı?
+        boolean alreadyRefunded = refundRepository.findAll().stream()
+                .anyMatch(r -> r.getOrderItem().getOrderItemId().equals(orderItem.getOrderItemId()));
+        if (alreadyRefunded) {
+            throw new IllegalArgumentException("Bu ürün için zaten bir iade talebi mevcut.");
+        }
+
 
         // Yeni iade kaydı oluştur
         Refund refund = new Refund();
@@ -163,6 +174,7 @@ public class RefundService {
     /**
      * Tüm siparişi iade etme işlemi
      */
+    @Transactional
     public List<Refund> requestRefundForEntireOrder(String orderId, String reason) {
         // Siparişi bul
         Order order = orderService.getOrderById(orderId);
@@ -222,6 +234,7 @@ public class RefundService {
     /**
      * İade işlemini tamamla (Admin veya otomatik işlem için)
      */
+    @Transactional
     public Refund processRefund(String refundId, String status) {
         Refund refund = getRefundById(refundId);
         if (refund == null) {

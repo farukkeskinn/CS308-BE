@@ -5,7 +5,7 @@ import edu.sabanciuniv.projectbackend.models.ShoppingCart;
 import edu.sabanciuniv.projectbackend.repositories.CustomerRepository;
 import edu.sabanciuniv.projectbackend.repositories.ShoppingCartRepository;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,6 +29,7 @@ public class CustomerService {
         return customerRepository.findById(customerId).orElse(null);
     }
 
+    @Transactional
     public Customer saveCustomer(Customer customer) {
         Customer saved = customerRepository.save(customer);
 
