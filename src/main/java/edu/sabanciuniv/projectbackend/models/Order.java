@@ -49,9 +49,6 @@ public class Order {
     @Column(name = "invoice_link")
     private String invoiceLink;
 
-    @Column(name = "refundable", nullable = false)
-    private Boolean refundable = true; // Varsayılan olarak true
-
     @ManyToOne
     private SalesManager salesManager;
 
@@ -102,10 +99,6 @@ public class Order {
         return orderItems;
     }
 
-    public Boolean getRefundable() {
-        return refundable;
-    }
-
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
@@ -138,12 +131,10 @@ public class Order {
         this.invoiceLink = invoiceLink;
     }
 
-    public void setRefundable(Boolean refundable) {
-        this.refundable = refundable;
-    }
     public Address getShippingAddress() {
         return shippingAddress;
     }
+
     public void setShippingAddress(Address shippingAddress) {
         this.shippingAddress = shippingAddress;
     }

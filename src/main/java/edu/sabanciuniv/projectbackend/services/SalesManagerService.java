@@ -133,6 +133,7 @@ public class SalesManagerService {
         return refundRepository.findAll();
     }
 
+    @Transactional
     public Refund processRefund(String refundId, String decision, String comment) {
         Refund refund = refundRepository.findById(refundId)
                 .orElseThrow(() -> new RuntimeException("Refund not found with ID: " + refundId));
@@ -141,6 +142,11 @@ public class SalesManagerService {
             throw new IllegalStateException("This refund has already been processed. Current status: " + refund.getRefundStatus());
         }
 
+        // İşlem tarihini her durumda set et
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println("Setting process date to: " + now);
+        refund.setProcessDate(now);
+
         if ("APPROVE".equals(decision)) {
             refund.setRefundStatus("APPROVED");
             OrderItem orderItem = refund.getOrderItem();
@@ -148,14 +154,53 @@ public class SalesManagerService {
             Integer currentStock = product.getStock();
             product.setStock(currentStock + orderItem.getQuantity());
             Order order = refund.getOrder();
-
+            
+            // Önce refund'ı kaydet
+            Refund savedRefund = refundRepository.save(refund);
+            
+            // processDate'in null olmadığından emin ol
+            if (savedRefund.getProcessDate() == null) {
+                savedRefund.setProcessDate(now);
+                savedRefund = refundRepository.save(savedRefund);
+            }
+            
+            System.out.println("Saved refund with process date: " + savedRefund.getProcessDate());
+            
+            // Sonra e-posta gönder
+            try {
+                System.out.println("=== Refund Email Debug Info ===");
+                System.out.println("Refund ID: " + savedRefund.getRefundId());
+                System.out.println("Process Date: " + savedRefund.getProcessDate());
+                System.out.println("Customer Email: " + savedRefund.getOrder().getCustomer().getEmail());
+                System.out.println("Customer Name: " + savedRefund.getOrder().getCustomer().getFirstName());
+                System.out.println("Order ID: " + savedRefund.getOrder().getOrderId());
+                System.out.println("Refund Amount: " + savedRefund.getRefundAmount());
+                System.out.println("Refund Reason: " + savedRefund.getReason());
+                System.out.println("============================");
+                
+                emailService.sendRefundConfirmationEmail(savedRefund);
+                System.out.println("Email sent successfully!");
+            } catch (Exception e) {
+                System.err.println("Failed to send refund confirmation email!");
+                System.err.println("Error: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
+            return savedRefund;
         } else if ("REJECT".equals(decision)) {
             refund.setRefundStatus("REJECTED");
+            Refund savedRefund = refundRepository.save(refund);
+            
+            // processDate'in null olmadığından emin ol
+            if (savedRefund.getProcessDate() == null) {
+                savedRefund.setProcessDate(now);
+                savedRefund = refundRepository.save(savedRefund);
+            }
+            
+            return savedRefund;
         } else {
             throw new IllegalArgumentException("Invalid decision. Must be either 'APPROVE' or 'REJECT'.");
         }
-
-        return refundRepository.save(refund);
     }
 
     public Map<String, Object> calculateProfitLossByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
