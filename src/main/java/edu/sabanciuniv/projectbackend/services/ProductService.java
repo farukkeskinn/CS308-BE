@@ -1,5 +1,7 @@
 package edu.sabanciuniv.projectbackend.services;
 
+import edu.sabanciuniv.projectbackend.controllers.ReviewController;
+import edu.sabanciuniv.projectbackend.models.Category;
 import edu.sabanciuniv.projectbackend.models.Product;
 import edu.sabanciuniv.projectbackend.repositories.ProductRepository;
 import org.springframework.data.domain.Page;
@@ -7,14 +9,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
+    private final CategoryService categoryService;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, CategoryService categoryService) {
         this.productRepository = productRepository;
+        this.categoryService   = categoryService;
     }
 
     public List<Product> getAllProducts() {
@@ -49,6 +54,17 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         product.setQuantity(newStock);
+        return productRepository.save(product);
+    }
+
+    public Product updateCategory(String productId, Integer newCategoryId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new NoSuchElementException("Product not found: " + productId));
+
+        // load the Category (will throw if not found)
+        Category cat = categoryService.getCategory(newCategoryId);
+        product.setCategory(cat);
+
         return productRepository.save(product);
     }
 }

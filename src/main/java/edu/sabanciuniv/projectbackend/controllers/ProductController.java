@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @RestController
@@ -130,5 +131,18 @@ public class ProductController {
                 .toList();
 
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/category/{categoryId}")
+    public ResponseEntity<ProductPublishedResponse> changeCategory(
+            @PathVariable("id") String productId,
+            @PathVariable("categoryId") Integer categoryId) {
+
+        try {
+            Product updated = productService.updateCategory(productId, categoryId);
+            return ResponseEntity.ok(new ProductPublishedResponse(updated));
+        } catch (NoSuchElementException ex) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
