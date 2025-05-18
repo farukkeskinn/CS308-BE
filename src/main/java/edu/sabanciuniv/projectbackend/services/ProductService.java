@@ -69,4 +69,9 @@ public class ProductService {
 
         return productRepository.save(product);
     }
+
+    public Product updateCategory(Product product, Category category) {
+        product.setCategory(category);
+        return productRepository.save(product);
+    }
 }

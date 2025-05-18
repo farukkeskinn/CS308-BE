@@ -3,13 +3,16 @@ package edu.sabanciuniv.projectbackend.controllers;
 import edu.sabanciuniv.projectbackend.dto.ProductDetailsResponse;
 import edu.sabanciuniv.projectbackend.dto.ProductPublishedResponse;
 import edu.sabanciuniv.projectbackend.dto.ReviewResponse;
+import edu.sabanciuniv.projectbackend.models.Category;
 import edu.sabanciuniv.projectbackend.models.Product;
 import edu.sabanciuniv.projectbackend.repositories.ProductRepository;
+import edu.sabanciuniv.projectbackend.services.CategoryService;
 import edu.sabanciuniv.projectbackend.services.ProductService;
 import edu.sabanciuniv.projectbackend.services.ReviewService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,11 +30,13 @@ public class ProductController {
     private final ProductService productService;
     private final ReviewService reviewService;
     private final ProductRepository productRepository;
+    private final CategoryService categoryService;
 
-    public ProductController(ProductService productService, ReviewService reviewService, ProductRepository productRepository) {
+    public ProductController(ProductService productService, ReviewService reviewService, ProductRepository productRepository, CategoryService categoryService) {
         this.productService = productService;
         this.reviewService = reviewService;
         this.productRepository = productRepository;
+        this.categoryService = categoryService;
     }
 
     @GetMapping
@@ -145,4 +150,33 @@ public class ProductController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PutMapping("/{id}/category/name/{categoryName}")
+    public ResponseEntity<ProductPublishedResponse> changeCategoryByName(
+            @PathVariable("id")           String productId,
+            @PathVariable("categoryName") String categoryName) {
+
+        try {
+            // load the Product
+            Product product = productService.getProductById(productId);
+            if (product == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // resolve Category by name (or 404)
+            Category cat = categoryService.getByName(categoryName);
+
+            // delegate into service
+            Product updated = productService.updateCategory(product, cat);
+
+            return ResponseEntity.ok(new ProductPublishedResponse(updated));
+
+        } catch (NoSuchElementException ex) {
+            // categoryService.getByName(...) or productService.updateCategory(...) threw
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        }
+    }
+
 }

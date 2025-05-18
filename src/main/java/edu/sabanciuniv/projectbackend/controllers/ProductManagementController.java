@@ -32,6 +32,7 @@ public class ProductManagementController {
         return productService.getProductById(productId);
     }
 
+    /*
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public Product createProduct(@RequestBody Map<String, Object> productData) {
         Product product = new Product();
@@ -51,6 +52,11 @@ public class ProductManagementController {
             product.setCategory(category);
         }
 
+        return productService.saveProduct(product);
+    }
+     */
+    @PostMapping
+    public Product createProduct(@RequestBody Product product) {
         return productService.saveProduct(product);
     }
 
