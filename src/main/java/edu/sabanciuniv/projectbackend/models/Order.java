@@ -49,6 +49,9 @@ public class Order {
     @Column(name = "invoice_link")
     private String invoiceLink;
 
+    @Column(nullable = false)
+    private Boolean refundable = false;
+
     @ManyToOne
     private SalesManager salesManager;
 
@@ -63,7 +66,7 @@ public class Order {
     private Address shippingAddress;
 
     // One order can have many order items
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
     // Constructors, Getters, Setters

@@ -1,9 +1,7 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
 import edu.sabanciuniv.projectbackend.dto.AddItemRequest;
-import edu.sabanciuniv.projectbackend.dto.WishlistItemDTO;
 import edu.sabanciuniv.projectbackend.models.Customer;
-import edu.sabanciuniv.projectbackend.models.ShoppingCart;
 import edu.sabanciuniv.projectbackend.models.Wishlist;
 import edu.sabanciuniv.projectbackend.repositories.CustomerRepository;
 import edu.sabanciuniv.projectbackend.services.WishlistService;
@@ -16,8 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/wishlist")        // tekil
-@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/api/wishlist")
 public class WishlistController {
 
     private final WishlistService   wishlistService;

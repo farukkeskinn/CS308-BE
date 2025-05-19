@@ -1,11 +1,10 @@
 package edu.sabanciuniv.projectbackend.models;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Data;
 
-@Data
 @Entity
 @Table(name = "customers")
 public class Customer {
@@ -47,14 +46,11 @@ public class Customer {
     @Column(name = "password", nullable = false)
     private String password;
 
-    // -- Relationships --
-    // 1) One customer has many addresses:
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Address> addresses = new ArrayList<>();
 
-    // 2) One customer can have many orders:
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
 
     // 3) One customer can have one shopping cart:
@@ -65,8 +61,8 @@ public class Customer {
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
     private Wishlist wishlist;
 
-    // 5) One customer can have many reviews:
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("customer-review")
     private List<Review> reviews = new ArrayList<>();
 
     // Constructors, Getters, Setters

@@ -7,6 +7,7 @@ import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.dto.PaymentRequest;
 import edu.sabanciuniv.projectbackend.models.OrderItem;
 import edu.sabanciuniv.projectbackend.repositories.OrderRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import edu.sabanciuniv.projectbackend.utils.EncryptionUtil;
 
@@ -26,9 +27,9 @@ public class InvoiceGeneratorService {
         this.orderRepository = orderRepository;
     }
 
-    public String generateInvoicePdf(Order order, PaymentRequest request) {
+    public String generateInvoicePdf(Order order, PaymentRequest request, HttpServletRequest httpRequest) {
         String fileName = "invoice_" + order.getOrderId() + ".pdf";
-        File outputFile = new File("build/resources/main/static/invoices", fileName);
+        File outputFile = new File("invoices", fileName);  // ./invoices klasörü
 
 // 🔐 Dizin yoksa oluştur
         File parentDir = outputFile.getParentFile();
@@ -38,7 +39,10 @@ public class InvoiceGeneratorService {
 
         String filePath = outputFile.getAbsolutePath();
 
-        String publicPdfUrl = "http://localhost:8080/invoices/" + fileName;
+        String publicPdfUrl = httpRequest.getScheme() + "://" +
+                httpRequest.getServerName() + ":" +
+                httpRequest.getServerPort() +
+                "/api/invoices/" + fileName;
 
         Document document = new Document(PageSize.A4, 50, 50, 50, 50);
 

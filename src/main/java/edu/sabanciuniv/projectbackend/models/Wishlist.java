@@ -53,10 +53,6 @@ public class Wishlist {
         return wishlistId;
     }
 
-    public String getWishlistStatus() {
-        return wishlistStatus;
-    }
-
     public Customer getCustomer() {
         return customer;
     }
@@ -79,10 +75,6 @@ public class Wishlist {
 
     public void setWishlistItems(List<WishlistItem> wishlistItems) {
         this.wishlistItems = wishlistItems;
-    }
-
-    public void setWishlistItems(WishlistItem wishlistItem) {
-        this.wishlistItems.add(wishlistItem);
     }
 }
 

@@ -43,13 +43,16 @@ public class Product {
     @Column(nullable = false)
     private String model;
 
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String description;
 
     @Column(name = "item_sold")
     private Integer itemSold;
 
+    @Column
     private Double price;
+
+    @Column(nullable = false)
     private Double cost;
 
     @Column(name = "discounted")
@@ -75,13 +78,25 @@ public class Product {
 
     // Relationship to Category
     @ManyToOne
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "category_id", nullable = true)
     @JsonBackReference
     private Category category;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Discount> discounts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ShoppingCartItem> shoppingCartItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WishlistItem> wishlistItems = new ArrayList<>();
+
     // e.g., One product can have many reviews (if you want direct mapping):
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("product-review")
     @JsonIgnoreProperties("product")
     private List<Review> reviews = new ArrayList<>();
 
@@ -207,7 +222,6 @@ public class Product {
     public void setDiscountedPrice(Double discountedPrice) {
         this.discountedPrice = discountedPrice;
     }
-
     public Boolean getPublished() {
         return published != null ? published : false;
     }

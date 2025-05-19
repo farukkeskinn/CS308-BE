@@ -5,6 +5,7 @@ import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.models.Payment;
 import edu.sabanciuniv.projectbackend.models.Address;
 import edu.sabanciuniv.projectbackend.repositories.PaymentRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import edu.sabanciuniv.projectbackend.dto.InvoiceResponse;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,7 +70,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public InvoiceResponse processCheckout(PaymentRequest request, String username) {
+    public InvoiceResponse processCheckout(PaymentRequest request, String username, HttpServletRequest servletRequest) {
         // 1️⃣ Kullanıcının sepetini al
         ShoppingCart cart = cartService.getCartByUsername(username);
         List<ShoppingCartItem> items = cart.getShoppingCartItems();
@@ -149,7 +150,7 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         // 📄 7️⃣ Fatura PDF oluştur
-        String pdfPath = invoiceGeneratorService.generateInvoicePdf(order, request);
+        String pdfPath = invoiceGeneratorService.generateInvoicePdf(order, request, servletRequest);
         String encUrl;
         if (pdfPath.startsWith("http")){
             encUrl = encryptionUtil.encryptString(pdfPath);

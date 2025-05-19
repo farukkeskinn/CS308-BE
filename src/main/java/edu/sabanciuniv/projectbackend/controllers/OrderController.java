@@ -1,6 +1,5 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
-import edu.sabanciuniv.projectbackend.dto.OrderItemDTO;
 import edu.sabanciuniv.projectbackend.dto.OrderSummaryDTO;
 import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.services.OrderService;
@@ -13,7 +12,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = "http://localhost:3000")
 public class OrderController {
 
     private final OrderService orderService;

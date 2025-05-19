@@ -115,104 +115,23 @@ public class RefundService {
         return true;
     }
 
-    /**
-     * Müşteri iadesi işlemi - tek ürün için
-     */
-    @Transactional
-    public Refund requestRefund(RefundRequest request) {
-        // Siparişi bul
-        Order order = orderService.getOrderById(request.getOrderId());
-        if (order == null) {
-            throw new IllegalArgumentException("Sipariş bulunamadı");
-        }
-
-        // Sipariş durumunu kontrol et - sadece teslim edilmiş siparişler iade edilebilir
-        if (!"DELIVERED".equals(order.getOrderStatus())) {
-            throw new IllegalArgumentException("Sadece teslim edilmiş siparişler iade edilebilir");
-        }
-
-        // 30 günlük süre kontrolü
-        LocalDateTime orderDate = order.getOrderDate();
-        LocalDateTime thirtyDaysAfterOrder = orderDate.plusDays(30);
-        if (LocalDateTime.now().isAfter(thirtyDaysAfterOrder)) {
-            throw new IllegalArgumentException("İade süresi dolmuştur. Siparişler 30 gün içinde iade edilebilir");
-        }
-
-        // OrderItem'ı bul
-        Optional<OrderItem> orderItemOpt = order.getOrderItems().stream()
-                .filter(item -> item.getOrderItemId().equals(request.getOrderItemId()))
-                .findFirst();
-
-        if (orderItemOpt.isEmpty()) {
-            throw new IllegalArgumentException("Sipariş kalemi bulunamadı");
-        }
-
-        OrderItem orderItem = orderItemOpt.get();
-
-        // Refund tablosunda bu orderItem için zaten bir istek var mı?
-        boolean alreadyRefunded = refundRepository.findAll().stream()
-                .anyMatch(r -> r.getOrderItem().getOrderItemId().equals(orderItem.getOrderItemId()));
-        if (alreadyRefunded) {
-            throw new IllegalArgumentException("Bu ürün için zaten bir iade talebi mevcut.");
-        }
-
-        // Yeni iade kaydı oluştur
-        Refund refund = new Refund();
-        refund.setRefundId(UUID.randomUUID().toString());
-        refund.setOrder(order);
-        refund.setOrderItem(orderItem);
-        refund.setRequestDate(LocalDateTime.now());
-        refund.setRefundStatus("PENDING");
-        refund.setRefundAmount(orderItem.getPriceAtPurchase() * orderItem.getQuantity());
-        refund.setReason(request.getReason());
-
-        // Stok güncelleme
-        Product product = orderItem.getProduct();
-        int newQuantity = product.getQuantity() + orderItem.getQuantity();
-        productService.updateProductStock(product.getProductId(), newQuantity);
-
-        // Sipariş öğesini listeden kaldır
-        order.getOrderItems().remove(orderItem);
-
-        // Eğer siparişteki tüm ürünler iade edildiyse siparişi tamamen iade edildi olarak işaretle
-        if (order.getOrderItems().isEmpty()) {
-            order.setOrderStatus("REFUNDED");
-        } else {
-            // Sipariş toplam fiyatını güncelle
-            double newTotalPrice = order.getOrderItems().stream()
-                    .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
-                    .sum();
-            order.setTotalPrice(newTotalPrice);
-        }
-
-        orderService.saveOrder(order);
-        return saveRefund(refund);
-    }
-
-    /**
-     * Tüm siparişi iade etme işlemi
-     */
     @Transactional
     public List<Refund> requestRefundForEntireOrder(String orderId, String reason) {
-        // Siparişi bul
         Order order = orderService.getOrderById(orderId);
         if (order == null) {
             throw new IllegalArgumentException("Sipariş bulunamadı");
         }
 
-        // Sipariş durumunu kontrol et - sadece teslim edilmiş siparişler iade edilebilir
         if (!"DELIVERED".equals(order.getOrderStatus())) {
             throw new IllegalArgumentException("Sadece teslim edilmiş siparişler iade edilebilir");
         }
 
-        // 30 günlük süre kontrolü
         LocalDateTime orderDate = order.getOrderDate();
         LocalDateTime thirtyDaysAfterOrder = orderDate.plusDays(30);
         if (LocalDateTime.now().isAfter(thirtyDaysAfterOrder)) {
             throw new IllegalArgumentException("İade süresi dolmuştur. Siparişler 30 gün içinde iade edilebilir");
         }
 
-        // Siparişte iade edilecek ürün var mı?
         if (order.getOrderItems().isEmpty()) {
             throw new IllegalArgumentException("Siparişte iade edilecek ürün bulunamadı");
         }
@@ -220,9 +139,7 @@ public class RefundService {
         List<Refund> refunds = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
 
-        // Siparişin tüm ürünleri için iade oluştur
         for (OrderItem orderItem : new ArrayList<>(order.getOrderItems())) {
-            // Yeni iade kaydı oluştur
             Refund refund = new Refund();
             refund.setRefundId(UUID.randomUUID().toString());
             refund.setOrder(order);
@@ -232,16 +149,7 @@ public class RefundService {
             refund.setRefundAmount(orderItem.getPriceAtPurchase() * orderItem.getQuantity());
             refund.setReason(reason);
 
-            // Stok güncelleme
-            Product product = orderItem.getProduct();
-            int newQuantity = product.getQuantity() + orderItem.getQuantity();
-            productService.updateProductStock(product.getProductId(), newQuantity);
-
-            // İade kaydını kaydet
             refunds.add(saveRefund(refund));
-
-            // Sipariş öğesini listeden kaldır
-            order.getOrderItems().remove(orderItem);
         }
 
         // Siparişin durumunu güncelle

@@ -5,6 +5,8 @@ import edu.sabanciuniv.projectbackend.repositories.ProductRepository;
 import edu.sabanciuniv.projectbackend.repositories.RefundRepository;
 import edu.sabanciuniv.projectbackend.repositories.SalesManagerRepository;
 import edu.sabanciuniv.projectbackend.repositories.WishlistItemRepository;
+import edu.sabanciuniv.projectbackend.utils.EncryptionUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,9 @@ public class SalesManagerService {
     private final RefundRepository refundRepository;
     private final WishlistItemRepository wishlistItemRepository;
     private final EmailService emailService;
+
+    @Autowired
+    private EncryptionUtil encryptionUtil;
 
     public SalesManagerService(SalesManagerRepository salesManagerRepository,
                                ProductRepository productRepository,
@@ -70,18 +75,24 @@ public class SalesManagerService {
 
         List<Map<String, Object>> invoiceList = new ArrayList<>();
         for (Order order : orders) {
-            String invoiceFileName = "invoice_" + order.getOrderId() + ".pdf";
-            File invoiceFile = new File("build/resources/main/static/invoices", invoiceFileName);
+            String encryptedInvoiceLink = order.getInvoiceLink();
 
-            if (invoiceFile.exists()) {
-                Map<String, Object> invoiceInfo = new HashMap<>();
-                invoiceInfo.put("orderId", order.getOrderId());
-                invoiceInfo.put("orderDate", order.getOrderDate());
-                invoiceInfo.put("customerName", order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName());
-                invoiceInfo.put("totalAmount", order.getTotalPrice());
-                invoiceInfo.put("invoiceUrl", "http://localhost:8080/invoices/" + invoiceFileName);
+            if (encryptedInvoiceLink != null && !encryptedInvoiceLink.isBlank()) {
+                try {
+                    // 🔓 AES-256-GCM decrypt
+                    String decryptedLink = encryptionUtil.decryptString(encryptedInvoiceLink);
 
-                invoiceList.add(invoiceInfo);
+                    Map<String, Object> invoiceInfo = new HashMap<>();
+                    invoiceInfo.put("orderId", order.getOrderId());
+                    invoiceInfo.put("orderDate", order.getOrderDate());
+                    invoiceInfo.put("customerName", order.getCustomer().getFirstName() + " " + order.getCustomer().getLastName());
+                    invoiceInfo.put("totalAmount", order.getTotalPrice());
+                    invoiceInfo.put("invoiceUrl", decryptedLink);
+                    invoiceList.add(invoiceInfo);
+                } catch (Exception e) {
+                    System.err.println("❌ Invoice decrypt failed: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
 

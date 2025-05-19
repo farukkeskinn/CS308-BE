@@ -1,9 +1,9 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
-import edu.sabanciuniv.projectbackend.models.Category;
 import edu.sabanciuniv.projectbackend.models.Product;
 import edu.sabanciuniv.projectbackend.services.ProductService;
-import org.springframework.http.MediaType;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +13,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/product-managers/products")
-@CrossOrigin(origins = "http://localhost:3000")
 public class ProductManagementController {
 
     private final ProductService productService;
@@ -86,8 +85,17 @@ public class ProductManagementController {
     }
 
     @DeleteMapping("/{productId}")
-    public void deleteProduct(@PathVariable("productId") String productId) {
-        productService.deleteProduct(productId);
+    public ResponseEntity<?> deleteProduct(@PathVariable String productId) {
+        try {
+            productService.deleteProduct(productId);
+            return ResponseEntity.noContent().build();
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Cannot delete product. It is referenced in other records.");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while deleting the product.");
+        }
     }
 
     @GetMapping("/{id}/name")

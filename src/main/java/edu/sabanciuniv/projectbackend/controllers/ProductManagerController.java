@@ -1,6 +1,5 @@
 package edu.sabanciuniv.projectbackend.controllers;
 
-import edu.sabanciuniv.projectbackend.models.Product;
 import edu.sabanciuniv.projectbackend.models.ProductManager;
 import edu.sabanciuniv.projectbackend.services.ProductManagerService;
 import edu.sabanciuniv.projectbackend.services.ProductService;
@@ -10,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/product-managers")
-@CrossOrigin(origins = "http://localhost:3000")
 public class ProductManagerController {
 
     private final ProductManagerService productManagerService;
