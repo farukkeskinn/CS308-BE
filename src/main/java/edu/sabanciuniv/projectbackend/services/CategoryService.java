@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -28,6 +29,7 @@ public class CategoryService {
         return categoryRepository.findById(categoryId).orElse(null);
     }
 
+    @Transactional
     public Category saveCategory(Category category) {
         return categoryRepository.save(category);
     }
@@ -59,5 +61,10 @@ public class CategoryService {
         productRepository.saveAll(affectedProducts);
         // Finally, delete the category
         categoryRepository.delete(category);
+    }
+
+    public Category getByName(String name) {
+        return categoryRepository.findByCategoryName(name)
+                .orElseThrow(() -> new NoSuchElementException("Category not found: " + name));
     }
 }

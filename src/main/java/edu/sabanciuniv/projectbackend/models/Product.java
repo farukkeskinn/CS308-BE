@@ -1,5 +1,6 @@
 package edu.sabanciuniv.projectbackend.models;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -10,6 +11,26 @@ import java.util.List;
 @Entity
 @Table(name = "products")
 public class Product {
+
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (version == null) {
+            version = 0L;
+        }
+    }
+
+    public Long getVersion() {
+        return version != null ? version : 0L;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version != null ? version : 0L;
+    }
 
     @Id
     @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
@@ -22,14 +43,29 @@ public class Product {
     @Column(nullable = false)
     private String model;
 
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String description;
 
     @Column(name = "item_sold")
     private Integer itemSold;
 
+    @Column
     private Double price;
+
+    @Column(nullable = false)
     private Double cost;
+
+    @Column(name = "discounted")
+    private Boolean discounted = false;
+
+    @Column(name = "discount_percentage")
+    private Integer discountPercentage;
+
+    @Column(name = "discounted_price")
+    private Double discountedPrice;
+
+    @Column(name = "published")
+    private Boolean published = false;
 
     @Column(name = "serial_number", nullable = false)
     private String serialNumber;
@@ -42,12 +78,26 @@ public class Product {
 
     // Relationship to Category
     @ManyToOne
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "category_id", nullable = true)
+    @JsonBackReference
     private Category category;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Discount> discounts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ShoppingCartItem> shoppingCartItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WishlistItem> wishlistItems = new ArrayList<>();
+
     // e.g., One product can have many reviews (if you want direct mapping):
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("product-review")
+    @JsonIgnoreProperties("product")
     private List<Review> reviews = new ArrayList<>();
 
     // Constructors, Getters, Setters
@@ -112,6 +162,18 @@ public class Product {
         return this.quantity;
     }
 
+    public Double getDiscountedPrice() { return this.discountedPrice; }
+
+    public void setDiscountedPrice() { this.discountedPrice = discountedPrice; }
+  
+    public Boolean getDiscounted() {
+        return discounted;
+    }
+
+    public Integer getDiscountPercentage() {
+        return discountPercentage;
+    }
+
     public void setStock(Integer stock) {
         this.quantity = stock;
     }
@@ -136,5 +198,53 @@ public class Product {
     public void setCategory(Category category) {
         this.category = category;
     }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setCost(Double cost) {
+        this.cost = cost;
+    }
+
+    public void setDiscounted(Boolean discounted) {
+        this.discounted = discounted;
+    }
+
+    public void setDiscountPercentage(Integer discountPercentage) {
+        this.discountPercentage = discountPercentage;
+    }
+
+    public void setDiscountedPrice(Double discountedPrice) {
+        this.discountedPrice = discountedPrice;
+    }
+    public Boolean getPublished() {
+        return published != null ? published : false;
+    }
+
+    public void setPublished(Boolean published) {
+        this.published = published;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
+    public void setWarranty_status(Integer warranty_status) {
+        this.warranty_status = warranty_status;
+    }
+
+    public void setDistributor(String distributor) {
+        this.distributor = distributor;
+    }
+
+    public void setImage_url(String image_url) {
+        this.image_url = image_url;
+    }
+
 }
 

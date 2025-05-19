@@ -3,7 +3,7 @@ package edu.sabanciuniv.projectbackend.services;
 import edu.sabanciuniv.projectbackend.models.WishlistItem;
 import edu.sabanciuniv.projectbackend.repositories.WishlistItemRepository;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
@@ -23,10 +23,11 @@ public class WishlistItemService {
         return wishlistItemRepository.findById(wishlistItemId).orElse(null);
     }
 
+    @Transactional
     public WishlistItem saveWishlistItem(WishlistItem item) {
         return wishlistItemRepository.save(item);
     }
-
+    @Transactional
     public void deleteWishlistItem(String wishlistItemId) {
         wishlistItemRepository.deleteById(wishlistItemId);
     }

@@ -3,7 +3,7 @@ package edu.sabanciuniv.projectbackend.services;
 import edu.sabanciuniv.projectbackend.models.Discount;
 import edu.sabanciuniv.projectbackend.repositories.DiscountRepository;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
@@ -27,6 +27,7 @@ public class DiscountService {
         return discountRepository.save(discount);
     }
 
+    @Transactional
     public void deleteDiscount(String discountId) {
         discountRepository.deleteById(discountId);
     }

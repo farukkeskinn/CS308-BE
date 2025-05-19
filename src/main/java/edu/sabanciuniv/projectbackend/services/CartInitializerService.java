@@ -1,5 +1,5 @@
 package edu.sabanciuniv.projectbackend.services;
-
+import org.springframework.transaction.annotation.Transactional;
 import edu.sabanciuniv.projectbackend.models.Customer;
 import edu.sabanciuniv.projectbackend.models.ShoppingCart;
 import edu.sabanciuniv.projectbackend.repositories.CustomerRepository;
@@ -20,17 +20,24 @@ public class CartInitializerService {
     }
 
     @PostConstruct
+    @Transactional
     public void initShoppingCartsForExistingCustomers() {
         var allCustomers = customerRepository.findAll();
-        for (Customer customer : allCustomers) {
-            if (shoppingCartRepository.findByCustomer(customer) == null) {
+
+        for (Customer detachedCustomer : allCustomers) {
+            // Hibernate managed instance kullan
+            Customer customer = customerRepository.findById(detachedCustomer.getCustomerId()).orElse(null);
+            if (customer == null) continue;
+
+            if (shoppingCartRepository.findByCustomerId(customer.getCustomerId()) == null) {
                 ShoppingCart cart = new ShoppingCart();
-                cart.setCartId(customer.getCustomerId()); // ID eşitliği
+                cart.setCartId(customer.getCustomerId());
                 cart.setCartStatus("EMPTY");
                 cart.setCustomer(customer);
                 shoppingCartRepository.save(cart);
-                System.out.println("Cart created for customer: " + customer.getCustomerId());
             }
+
         }
     }
+
 }

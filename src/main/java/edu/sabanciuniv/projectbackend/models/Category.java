@@ -9,6 +9,26 @@ import java.util.List;
 @Table(name = "categories")
 public class Category {
 
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (version == null) {
+            version = 0L;
+        }
+    }
+
+    public Long getVersion() {
+        return version != null ? version : 0L;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version != null ? version : 0L;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // It's an INT AUTO_INCREMENT
     @Column(name = "category_id")

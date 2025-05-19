@@ -3,6 +3,7 @@ package edu.sabanciuniv.projectbackend.controllers;
 import edu.sabanciuniv.projectbackend.models.Payment;
 import edu.sabanciuniv.projectbackend.services.PaymentService;
 import edu.sabanciuniv.projectbackend.utils.JWTUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,6 @@ import java.util.List;
 @Validated
 @RestController
 @RequestMapping("/api/payments")
-@CrossOrigin(origins = "http://localhost:3000")
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -55,7 +55,8 @@ public class PaymentController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> checkout(
             @Valid @RequestBody PaymentRequest request,
-            @RequestHeader("Authorization") String authHeader
+            @RequestHeader("Authorization") String authHeader,
+            HttpServletRequest servletRequest
     ) {
         try {
             // 🔐 Token'ı al ve "Bearer " kısmını temizle
@@ -68,7 +69,7 @@ public class PaymentController {
             String username = JWTUtil.getEmailFromToken(token);
 
             // 🧾 Checkout işlemi başlat
-            InvoiceResponse invoice = paymentService.processCheckout(request, username);
+            InvoiceResponse invoice = paymentService.processCheckout(request, username, servletRequest);
             return ResponseEntity.ok(invoice);
 
         } catch (Exception e) {

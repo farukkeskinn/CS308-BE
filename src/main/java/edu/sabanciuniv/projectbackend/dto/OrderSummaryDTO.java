@@ -11,7 +11,11 @@ public class OrderSummaryDTO {
     private String paymentStatus;
     private List<OrderItemDTO> orderItems;
     private String invoiceLink;
+    private String addressId;
+    private String addressName;
+    private String addressLine;
 
+    public OrderSummaryDTO() {}
 
     public OrderSummaryDTO(String orderId, Double totalPrice, LocalDateTime orderDate,
                            String orderStatus, String paymentStatus, List<OrderItemDTO> orderItems, String invoiceLink) {
@@ -22,6 +26,9 @@ public class OrderSummaryDTO {
         this.paymentStatus = paymentStatus;
         this.orderItems = orderItems;
         this.invoiceLink = invoiceLink;
+        this.addressId    = addressId;
+        this.addressName  = addressName;
+        this.addressLine  = addressLine;
     }
 
     public String getOrderId() { return orderId; }
@@ -38,5 +45,9 @@ public class OrderSummaryDTO {
     public void setInvoiceLink(String invoiceLink) {
         this.invoiceLink = invoiceLink;
     }
-
+    public void setOrderId(String orderId) { this.orderId = orderId; }
+    public void setTotalPrice(Double totalPrice) { this.totalPrice = totalPrice; }
+    public void setOrderDate(LocalDateTime orderDate) { this.orderDate = orderDate; }
+    public void setOrderStatus(String orderStatus) { this.orderStatus = orderStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
 }

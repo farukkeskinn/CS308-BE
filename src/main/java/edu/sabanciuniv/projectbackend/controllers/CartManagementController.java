@@ -6,16 +6,13 @@ import edu.sabanciuniv.projectbackend.dto.MergeCartRequest;
 import edu.sabanciuniv.projectbackend.dto.RemovePartialQuantityRequest;
 import edu.sabanciuniv.projectbackend.models.ShoppingCart;
 import edu.sabanciuniv.projectbackend.services.CartManagementService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/cart-management")
-@CrossOrigin(origins = "http://localhost:3000")
 public class CartManagementController {
 
     private final CartManagementService cartManagementService;

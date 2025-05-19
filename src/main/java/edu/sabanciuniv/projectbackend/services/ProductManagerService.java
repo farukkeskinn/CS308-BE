@@ -1,5 +1,5 @@
 package edu.sabanciuniv.projectbackend.services;
-
+import org.springframework.transaction.annotation.Transactional;
 import edu.sabanciuniv.projectbackend.models.ProductManager;
 import edu.sabanciuniv.projectbackend.repositories.ProductManagerRepository;
 import org.springframework.stereotype.Service;
@@ -23,10 +23,12 @@ public class ProductManagerService {
         return productManagerRepository.findById(pmId).orElse(null);
     }
 
+    @Transactional
     public ProductManager saveProductManager(ProductManager productManager) {
         return productManagerRepository.save(productManager);
     }
 
+    @Transactional
     public void deleteProductManager(String pmId) {
         productManagerRepository.deleteById(pmId);
     }

@@ -14,16 +14,18 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, String> {
     // Additional custom queries if needed
     @Query("SELECT p FROM Product p " +
-            "WHERE p.category.categoryId = :categoryId " +
-            "   OR (p.category.parentCategory IS NOT NULL " +
-            "       AND p.category.parentCategory.categoryId = :categoryId)")
+            "WHERE p.published = true AND p.price > 0 " +
+            "AND (p.category.categoryId = :categoryId " +
+            "     OR (p.category.parentCategory IS NOT NULL " +
+            "         AND p.category.parentCategory.categoryId = :categoryId))")
     Page<Product> findByCategory(@Param("categoryId") Integer categoryId, Pageable pageable);
 
 
     @Query("SELECT p FROM Product p " +
-            "WHERE (p.category.categoryId = :categoryId " +
-            "   OR (p.category.parentCategory IS NOT NULL " +
-            "       AND p.category.parentCategory.categoryId = :categoryId)) " +
+            "WHERE p.published = true AND p.price > 0 " +
+            "AND (p.category.categoryId = :categoryId " +
+            "     OR (p.category.parentCategory IS NOT NULL " +
+            "         AND p.category.parentCategory.categoryId = :categoryId)) " +
             "AND p.productId != :excludeProductId")
     Page<Product> findRecommendedProducts(
             @Param("categoryId") Integer categoryId,
@@ -31,5 +33,12 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             Pageable pageable);
 
     List<Product> findByCategory_CategoryId(Integer categoryId);
+
+    List<Product> findByPublished(Boolean published);
+
+    @Query("SELECT p FROM Product p " +
+            "WHERE p.published = true " +
+            "AND p.price > :minPrice")
+    List<Product> findByPublishedTrueAndPriceGreaterThan(Double minPrice);
 
 }

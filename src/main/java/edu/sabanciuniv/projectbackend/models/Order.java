@@ -10,6 +10,26 @@ import java.util.List;
 @Table(name = "orders")
 public class Order {
 
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (version == null) {
+            version = 0L;
+        }
+    }
+
+    public Long getVersion() {
+        return version != null ? version : 0L;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version != null ? version : 0L;
+    }
+
     @Id
     @Column(name = "order_id", columnDefinition = "CHAR(36)")
     private String orderId;
@@ -29,6 +49,9 @@ public class Order {
     @Column(name = "invoice_link")
     private String invoiceLink;
 
+    @Column(nullable = false)
+    private Boolean refundable = false;
+
     @ManyToOne
     private SalesManager salesManager;
 
@@ -38,8 +61,12 @@ public class Order {
     @JsonIgnore
     private Customer customer;
 
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "address_id", nullable = true)
+    private Address shippingAddress;
+
     // One order can have many order items
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
     // Constructors, Getters, Setters
@@ -107,5 +134,16 @@ public class Order {
         this.invoiceLink = invoiceLink;
     }
 
+    public Address getShippingAddress() {
+        return shippingAddress;
+    }
 
+    public void setShippingAddress(Address shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+
+    // Constructor'da version'ı başlat
+    public Order() {
+        this.version = 0L;
+    }
 }

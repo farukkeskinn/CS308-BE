@@ -61,9 +61,13 @@ public class ReviewService {
     public Review updateReviewStatus(String reviewId, String newStatus) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review not found: " + reviewId));
+
         review.setApprovalStatus(newStatus);
+
+        // Bu save çağrısı @Version varsa optimistic locking yapar
         return reviewRepository.save(review);
     }
+
 
     @Transactional
     public Review submitReview(String customerId,
@@ -72,13 +76,14 @@ public class ReviewService {
                                String comment) {
 
         List<Order> orders = orderService.getOrdersByCustomer(customerId);
-        boolean delivered = orders.stream()
-                .filter(order -> "DELIVERED".equalsIgnoreCase(order.getOrderStatus()))
+        boolean canReview = orders.stream()
+                .filter(order -> "DELIVERED".equalsIgnoreCase(order.getOrderStatus()) ||
+                        "REFUNDED".equalsIgnoreCase(order.getOrderStatus()))
                 .flatMap(order -> order.getOrderItems().stream())
                 .anyMatch(item -> item.getProduct().getProductId().equals(productId));
 
-        if (!delivered) {
-            throw new RuntimeException("Review can be done on only delivered orders.");
+        if (!canReview) {
+            throw new RuntimeException("Review can be done on only delivered or refunded orders.");
         }
 
         Customer customer = customerRepository.findById(customerId)

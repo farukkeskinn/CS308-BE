@@ -6,7 +6,10 @@ import com.itextpdf.text.pdf.*;
 import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.dto.PaymentRequest;
 import edu.sabanciuniv.projectbackend.models.OrderItem;
+import edu.sabanciuniv.projectbackend.repositories.OrderRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
+import edu.sabanciuniv.projectbackend.utils.EncryptionUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,10 +18,31 @@ import java.io.IOException;
 @Service
 public class InvoiceGeneratorService {
 
-    public String generateInvoicePdf(Order order, PaymentRequest request) {
+    private final EncryptionUtil encryptionUtil;
+    private final OrderRepository orderRepository;
+
+    public InvoiceGeneratorService(EncryptionUtil encryptionUtil,
+                                   OrderRepository orderRepository) {
+        this.encryptionUtil = encryptionUtil;
+        this.orderRepository = orderRepository;
+    }
+
+    public String generateInvoicePdf(Order order, PaymentRequest request, HttpServletRequest httpRequest) {
         String fileName = "invoice_" + order.getOrderId() + ".pdf";
-        String filePath = new File("build/resources/main/static/invoices", fileName).getAbsolutePath();
-        String publicPdfUrl = "http://localhost:8080/invoices/" + fileName;
+        File outputFile = new File("invoices", fileName);  // ./invoices klasörü
+
+// 🔐 Dizin yoksa oluştur
+        File parentDir = outputFile.getParentFile();
+        if (!parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+
+        String filePath = outputFile.getAbsolutePath();
+
+        String publicPdfUrl = httpRequest.getScheme() + "://" +
+                httpRequest.getServerName() + ":" +
+                httpRequest.getServerPort() +
+                "/api/invoices/" + fileName;
 
         Document document = new Document(PageSize.A4, 50, 50, 50, 50);
 
@@ -100,7 +124,7 @@ public class InvoiceGeneratorService {
 
             infoTable.addCell(getNoBorderCell("Address:", infoLabelFont));
             infoTable.addCell(getNoBorderCell(
-                    request.getAddress() + ", " + request.getCity() + ", " + request.getCountry() + " " + request.getZipCode() + ", ",
+                    request.getAddress() + ", " + request.getCity() + ", " + request.getCountry() + ", " + request.getZipCode(),
                     infoValueFont));
 
             infoTable.addCell(getNoBorderCell("Phone:", infoLabelFont));
@@ -150,7 +174,11 @@ public class InvoiceGeneratorService {
             e.printStackTrace();
         }
 
-        return publicPdfUrl;
+
+        String encryptedUrl = encryptionUtil.encryptString(publicPdfUrl);
+        order.setInvoiceLink(encryptedUrl);
+        orderRepository.save(order);
+        return encryptedUrl;
     }
 
     private PdfPCell getNoBorderCell(String text, Font font) {

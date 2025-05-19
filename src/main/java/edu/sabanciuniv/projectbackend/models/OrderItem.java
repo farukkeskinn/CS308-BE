@@ -6,6 +6,26 @@ import jakarta.persistence.*;
 @Table(name = "order_items")
 public class OrderItem {
 
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (version == null) {
+            version = 0L;
+        }
+    }
+
+    public Long getVersion() {
+        return version != null ? version : 0L;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version != null ? version : 0L;
+    }
+
     @Id
     @Column(name = "order_item_id", columnDefinition = "CHAR(36)")
     private String orderItemId;
@@ -67,4 +87,7 @@ public class OrderItem {
 
     public void setOrderItemId(String orderItemId) { this.orderItemId = orderItemId; }
 
+    public OrderItem() {
+        this.version = 0L;
+    }
 }

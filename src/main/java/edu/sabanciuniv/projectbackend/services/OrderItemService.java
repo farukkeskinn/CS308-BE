@@ -1,5 +1,5 @@
 package edu.sabanciuniv.projectbackend.services;
-
+import org.springframework.transaction.annotation.Transactional;
 import edu.sabanciuniv.projectbackend.models.OrderItem;
 import edu.sabanciuniv.projectbackend.repositories.OrderItemRepository;
 import org.springframework.stereotype.Service;
@@ -23,10 +23,12 @@ public class OrderItemService {
         return orderItemRepository.findById(orderItemId).orElse(null);
     }
 
+    @Transactional
     public OrderItem saveOrderItem(OrderItem orderItem) {
         return orderItemRepository.save(orderItem);
     }
 
+    @Transactional
     public void deleteOrderItem(String orderItemId) {
         orderItemRepository.deleteById(orderItemId);
     }
