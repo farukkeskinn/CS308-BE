@@ -4,10 +4,12 @@ import edu.sabanciuniv.projectbackend.dto.OrderSummaryDTO;
 import edu.sabanciuniv.projectbackend.models.Order;
 import edu.sabanciuniv.projectbackend.services.OrderService;
 import edu.sabanciuniv.projectbackend.utils.EncryptionUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -54,6 +56,22 @@ public class OrderController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{id}/invoice-url")
+    public ResponseEntity<?> getDecryptedInvoiceUrl(@PathVariable("id") String orderId) {
+        Order order = orderService.getOrderById(orderId);
+        if (order == null || order.getInvoiceLink() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            String decrypted = encryptionUtil.decryptString(order.getInvoiceLink());
+            return ResponseEntity.ok(Map.of("url", decrypted));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to decrypt invoice URL."));
+        }
     }
 
     @PostMapping("/{id}/cancel")

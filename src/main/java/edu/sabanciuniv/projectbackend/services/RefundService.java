@@ -118,28 +118,18 @@ public class RefundService {
     @Transactional
     public List<Refund> requestRefundForEntireOrder(String orderId, String reason) {
         Order order = orderService.getOrderById(orderId);
-        if (order == null) {
-            throw new IllegalArgumentException("Sipariş bulunamadı");
-        }
-
-        if (!"DELIVERED".equals(order.getOrderStatus())) {
+        if (order == null) throw new IllegalArgumentException("Sipariş bulunamadı");
+        if (!"DELIVERED".equals(order.getOrderStatus()))
             throw new IllegalArgumentException("Sadece teslim edilmiş siparişler iade edilebilir");
-        }
-
-        LocalDateTime orderDate = order.getOrderDate();
-        LocalDateTime thirtyDaysAfterOrder = orderDate.plusDays(30);
-        if (LocalDateTime.now().isAfter(thirtyDaysAfterOrder)) {
-            throw new IllegalArgumentException("İade süresi dolmuştur. Siparişler 30 gün içinde iade edilebilir");
-        }
-
-        if (order.getOrderItems().isEmpty()) {
+        if (LocalDateTime.now().isAfter(order.getOrderDate().plusDays(30)))
+            throw new IllegalArgumentException("İade süresi dolmuştur.");
+        if (order.getOrderItems().isEmpty())
             throw new IllegalArgumentException("Siparişte iade edilecek ürün bulunamadı");
-        }
 
         List<Refund> refunds = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
 
-        for (OrderItem orderItem : new ArrayList<>(order.getOrderItems())) {
+        for (OrderItem orderItem : order.getOrderItems()) {
             Refund refund = new Refund();
             refund.setRefundId(UUID.randomUUID().toString());
             refund.setOrder(order);
@@ -152,10 +142,8 @@ public class RefundService {
             refunds.add(saveRefund(refund));
         }
 
-        // Siparişin durumunu güncelle
-        order.setOrderStatus("REFUNDED");
+        order.setOrderStatus("REFUND_REQUESTED");
         orderService.saveOrder(order);
-
         return refunds;
     }
 

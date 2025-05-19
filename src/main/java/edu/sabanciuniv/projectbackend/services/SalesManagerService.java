@@ -22,6 +22,7 @@ public class SalesManagerService {
     private final RefundRepository refundRepository;
     private final WishlistItemRepository wishlistItemRepository;
     private final EmailService emailService;
+    private final OrderService orderService;
 
     @Autowired
     private EncryptionUtil encryptionUtil;
@@ -30,12 +31,14 @@ public class SalesManagerService {
                                ProductRepository productRepository,
                                RefundRepository refundRepository,
                                WishlistItemRepository wishlistItemRepository,
-                               EmailService emailService) {
+                               EmailService emailService,
+                               OrderService orderService) {
         this.salesManagerRepository = salesManagerRepository;
         this.productRepository = productRepository;
         this.refundRepository = refundRepository;
         this.wishlistItemRepository = wishlistItemRepository;
         this.emailService = emailService;
+        this.orderService = orderService;
     }
 
     public List<SalesManager> getAllSalesManagers() {
@@ -165,6 +168,8 @@ public class SalesManagerService {
             Integer currentStock = product.getStock();
             product.setStock(currentStock + orderItem.getQuantity());
             Order order = refund.getOrder();
+            order.setOrderStatus("REFUNDED");
+            orderService.saveOrder(order);
             
             // Önce refund'ı kaydet
             Refund savedRefund = refundRepository.save(refund);
@@ -207,6 +212,10 @@ public class SalesManagerService {
                 savedRefund.setProcessDate(now);
                 savedRefund = refundRepository.save(savedRefund);
             }
+
+            Order order = refund.getOrder();
+            order.setOrderStatus("REFUND_REJECTED");
+            orderService.saveOrder(order);
             
             return savedRefund;
         } else {
