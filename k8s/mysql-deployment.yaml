@@ -1,6 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata: {name: mysql}
+metadata: {name: mysql ,
+           namespace: cs308}
 spec:
   replicas: 1
   selector: {matchLabels: {app: mysql}}
